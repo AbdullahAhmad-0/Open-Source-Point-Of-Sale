@@ -1,0 +1,8 @@
+, '{shn}'
+\nself.{tName}.heading('{shn}', text='{Name}')
+\nself.{tName}.column('{shn}', width={width})
+, {shn}
+
+\n        self.var_{shn}.set(row[{NO Count}])
+\n            if self.var_search_by.get() == '{Name}':\n                search_by = '{shn}'
+, '{Name}'

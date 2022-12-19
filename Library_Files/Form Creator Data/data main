@@ -1,0 +1,1145 @@
+from tkinter import *
+from tkinter import ttk, messagebox, filedialog
+from tkcalendar import Calendar, DateEntry
+import os, random, time, pandas, csv, threading
+import pymysql, sqlite3
+from reportlab.lib import colors as abcdef
+from reportlab.lib import pagesizes  # For creating reports
+from reportlab.lib.units import mm, inch
+from reportlab.platypus import Paragraph, SimpleDocTemplate, Table, TableStyle  # For creating reports
+from reportlab.lib.styles import getSampleStyleSheet  # For creating reports
+from datetime import datetime, timedelta
+# import openpyxl # for creating the excel report xlsx format
+
+try:
+    from Autocomplete_Combo import AutocompleteCombobox
+    from Log_Generator import Log_Generator
+    from Top_Func import Func
+    from ColorScheme import ColorScheme
+except:
+    from Library_Files.Autocomplete_Combo import AutocompleteCombobox
+    from Library_Files.Log_Generator import Log_Generator
+    from Library_Files.Top_Func import Func
+    from Library_Files.ColorScheme import ColorScheme
+
+
+class [cName]:
+    current_folder = os.getcwd()
+    if os.path.basename(current_folder) == 'Library_Files':
+        main_folder = os.path.dirname(current_folder)
+    else:
+        main_folder = current_folder
+    setting_folder = f'{main_folder}\\Setting'
+    database_folder = f'{main_folder}\\Database'
+    temp_folder = f'{main_folder}\\Temp'
+    images_folder = f'{main_folder}\\Images'
+    library_folder = f'{main_folder}\\Library_Files'
+    iconPath = f"{images_folder}\\ico.ico"
+    default_db = f'{database_folder}\\Ahmad Soft Main DB.asdb'
+
+    # Main Variables
+    f = open(f'{setting_folder}\\Advance Setting', 'r')
+    adv_set = f.readlines()
+    f.close()
+
+    lineNo = 0
+    _, advset_rtfac = adv_set[lineNo].strip('\n').split(':')
+    advset_rtfac, *_ = advset_rtfac.split('.')
+
+    lineNo += 1
+    _, advset_dbb = adv_set[lineNo].strip('\n').split(':')
+    advset_dbb, *_ = advset_dbb.split('.')
+
+    lineNo += 1
+    _, advset_dbbe = adv_set[lineNo].strip('\n').split(':')
+    advset_dbbe, *_ = advset_dbbe.split('.')
+
+    lineNo += 1
+    _, advset_dbl = adv_set[lineNo].strip('\n').split(':')
+    advset_dbl, *_ = advset_dbl.split('.')
+    fn, fl = advset_dbl.split('+')
+
+    f = open(f'{setting_folder}\\{fn}.fl', 'r')
+    advset_dbl = f.readlines()
+    f.close()
+    advset_dbl = advset_dbl[int(fl) - 1].strip('\n')
+
+    lineNo += 1
+    _, advset_mhf = adv_set[lineNo].strip('\n').split(':')
+    advset_mhf, *_ = advset_mhf.split('.')
+
+    lineNo += 1
+    _, advset_mf = adv_set[lineNo].strip('\n').split(':')
+    advset_mf, *_ = advset_mf.split('.')
+
+    wSize, hSize = 700, 550
+    mainHFont = advset_mhf  # 'Algerian'
+    mainFont = advset_mf  # 'calibri'
+
+    colorList = ColorScheme().getColor()
+
+    # Changeable Variables
+    title = "[Title]"
+    mainName = "[mName]"
+    if advset_dbl == 'Default':
+        database = default_db
+    else:
+        database = advset_dbl
+
+    def __init__(self, wind) -> None:
+        if Log_Generator().findLog():
+            Log_Generator().startLog()
+        else:
+            Log_Generator().createLog()
+
+        self.root = wind
+        self.root.title(self.title)
+        self.root.iconbitmap(self.iconPath)
+        self.root.config(bg=self.colorList[3])
+
+        self.root.state('zoomed')  # zoomed
+        self.root.bind("<F11>", lambda event: self.root.attributes("-fullscreen", not self.root.attributes("-fullscreen")))
+        self.root.bind("<Escape>", lambda event: self.root.attributes("-fullscreen", False))
+        self.root.minsize(self.wSize, self.hSize)
+        # self.root.lift()
+        # self.root.attributes('-topmost', True)
+        # self.root.focus_force()
+
+        # Enable Database
+        self.EnableDb()
+
+        # TTk Style
+        style = ttk.Style()
+        style.theme_use('clam')
+        style.configure("TCombobox", foreground=self.colorList[10], fieldbackground=self.colorList[13], background=self.colorList[9])
+        style.configure("Treeview", fieldbackground=self.colorList[17], background=self.colorList[17], foreground=self.colorList[18])
+        style.map('Treeview', background=[('selected', self.colorList[19])], foreground=[('selected', self.colorList[20])])
+
+        # Variables
+        self.var_id = StringVar()  # id serial Number{DATA 1}
+
+        self.var_search_by = StringVar()
+        self.var_search_txt = StringVar()
+
+        self.root.update()
+
+        self.mainW = self.root.winfo_width()
+        self.mainH = self.root.winfo_height()
+
+        # Call Functions
+        self.CallCommonVar(21, 'Refresh')
+        self.CallCommonSet()
+        self.CallReportSet()
+        self.CallPGReportSet()
+        self.RefreshId()
+
+        f = open(f'{self.library_folder}\\Top Func', 'r')
+        top_func = f.readlines()
+        f.close()
+
+        method_list = [method for method in dir(Func) if method.startswith('__') is False]
+
+        self.bf_btnt_x = 0
+        self.bF_btnt_y = 0
+        symbols = {"self": self, "Func": Func}
+        for i in range(len(top_func)):
+            btn_text_, btn_w_ = top_func[i].strip('\n').split('.')
+            btn_w_ = int(btn_w_)
+
+            btn_add = Button(self.root, command=eval(f'lambda: Func.{method_list[i]}(self)', symbols), justify=LEFT, text=btn_text_, font=(self.formset_mainF, 13), bd=0, cursor='hand2', bg=self.colorList[5], activeforeground=self.colorList[22], activebackground=self.colorList[21], fg=self.colorList[6])
+            btn_add.place(x=self.bf_btnt_x + 1, y=self.bF_btnt_y, width=btn_w_, height=19)
+            self.bf_btnt_x += btn_w_ + 1
+
+        # Detail Frame
+        self.detailFrame = Frame(self.root, bg=self.colorList[2])
+        self.detailFrame.place(x=self.dFbFstF_x, y=self.dFsF_y, width=self.dFbF_w, height=self.dF_h)
+
+        y_space = int(self.cmnset_y_space)  # 30 for 20 fields limit 40 for 15 fields limit
+        self.dF_ent_w = int(self.cmnset_f_w)
+        self.dF_ent_x = int(self.cmnset_f_x)
+
+        y_ = 20
+        lbl_id = Label(self.detailFrame, text='ID', font=self.formset_mainF, bg=self.colorList[7], fg=self.colorList[8], highlightbackground=self.colorList[11], highlightthickness=2, highlightcolor=self.colorList[12])
+        lbl_id.place(x=10, y=y_)
+        ent_id = Entry(self.detailFrame, textvariable=self.var_id, disabledbackground=self.colorList[14], disabledforeground=self.colorList[15], state=DISABLED, border=0, font=self.formset_mainF)
+        ent_id.place(x=self.dF_ent_x, y=y_, width=self.dF_ent_w)
+        {DATA 2}
+
+        # Button Frame
+        self.buttonFrame = Frame(self.root, bg=self.colorList[3])
+        self.buttonFrame.place(x=self.dFbFstF_x, y=self.bF_y, width=self.dFbF_w, height=self.bF_h)
+
+        self.bF_btn_w = int(self.dFbF_w/6) + 1
+        self.bF_btn_h = self.bF_h
+        self.bf_btn_x = 0
+        self.bF_btn_y = 0
+
+        btn_add = Button(self.buttonFrame, command=self.Add, justify=LEFT, text='Add', font=(self.formset_mainF, 13), bd=0, cursor='hand2', bg=self.colorList[5], activeforeground=self.colorList[22], activebackground=self.colorList[21], fg=self.colorList[6])
+        btn_add.place(x=self.bf_btn_x + 1, y=self.bF_btn_y, width=self.bF_btn_w - 1, height=self.bF_btn_h)
+        self.bf_btn_x += self.bF_btn_w
+        btn_update = Button(self.buttonFrame, command=self.Update, justify=LEFT, text='Update', font=(self.formset_mainF, 13), bd=0, cursor='hand2', bg=self.colorList[5], activeforeground=self.colorList[22], activebackground=self.colorList[21], fg=self.colorList[6])
+        btn_update.place(x=self.bf_btn_x + 1, y=self.bF_btn_y, width=self.bF_btn_w - 1, height=self.bF_btn_h)
+        self.bf_btn_x += self.bF_btn_w
+        btn_delete = Button(self.buttonFrame, command=self.Delete, justify=LEFT, text='Delete', font=(self.formset_mainF, 13), bd=0, cursor='hand2', bg=self.colorList[5], activeforeground=self.colorList[22], activebackground=self.colorList[21], fg=self.colorList[6])
+        btn_delete.place(x=self.bf_btn_x + 1, y=self.bF_btn_y, width=self.bF_btn_w - 1, height=self.bF_btn_h)
+        self.bf_btn_x += self.bF_btn_w
+        btn_clear = Button(self.buttonFrame, command=self.Clear, justify=LEFT, text='Clear', font=(self.formset_mainF, 13), bd=0, cursor='hand2', bg=self.colorList[5], activeforeground=self.colorList[22], activebackground=self.colorList[21], fg=self.colorList[6])
+        btn_clear.place(x=self.bf_btn_x + 1, y=self.bF_btn_y, width=self.bF_btn_w - 1, height=self.bF_btn_h)
+        self.bf_btn_x += self.bF_btn_w
+        btn_import = Button(self.buttonFrame, command=self.Import, justify=LEFT, text='Import', font=(self.formset_mainF, 13), bd=0, cursor='hand2', bg=self.colorList[5], activeforeground=self.colorList[22], activebackground=self.colorList[21], fg=self.colorList[6])
+        btn_import.place(x=self.bf_btn_x + 1, y=self.bF_btn_y, width=self.bF_btn_w - 1, height=self.bF_btn_h)
+        self.bf_btn_x += self.bF_btn_w
+        btn_export = Button(self.buttonFrame, command=self.Export, justify=LEFT, text='Export', font=(self.formset_mainF, 13), bd=0, cursor='hand2', bg=self.colorList[5], activeforeground=self.colorList[22], activebackground=self.colorList[21], fg=self.colorList[6])
+        btn_export.place(x=self.bf_btn_x + 1, y=self.bF_btn_y, width=self.bF_btn_w - 1, height=self.bF_btn_h)
+        self.bf_btn_x += self.bF_btn_w
+
+        self.root.bind('<Return>', self._Add)
+        self.root.bind('<Control-u>', self._Update)
+        # self.root.bind('<Delete>', self.Delete)
+        self.root.bind('<Control-BackSpace>', self._Clear)
+        self.root.bind('<Control-i>', self._Import)
+        self.root.bind('<Prior>', self._Import)
+        self.root.bind('<Control-e>', self._Export)
+        self.root.bind('<Next>', self._Export)
+
+        # Search Frame
+        self.searchFrame = Frame(self.root, bg=self.colorList[2])
+        self.searchFrame.place(x=self.dFbF_w + 1, y=self.dFsF_y, width=self.sF_w, height=self.sF_h)
+
+        cmb_search_list = ['ID'{DATA 3}]
+        cmb_search = AutocompleteCombobox(self.searchFrame, values=cmb_search_list, textvariable=self.var_search_by, font=self.formset_mainF, background=self.colorList[9], foreground=self.colorList[10])
+        cmb_search.set_completion_list(cmb_search_list)
+        cmb_search.tk.eval(f'[ttk::combobox::PopdownWindow %s].f.l configure -background {self.colorList[13]}' % cmb_search)
+        cmb_search.place(x=10, y=10, width=150, height=self.sF_h - 20)
+        cmb_search.set('Select')
+
+        txt_search = Entry(self.searchFrame, textvariable=self.var_search_txt, border=0, font=self.formset_mainF, bg=self.colorList[9], fg=self.colorList[10], highlightbackground=self.colorList[11], highlightthickness=2, highlightcolor=self.colorList[12])
+        txt_search.place(x=162, y=10, height=self.sF_h - 20, width=self.sF_w - 150 - 20 - 2)
+        txt_search.bind("<KeyRelease>", self.Search)
+
+        # Record Frame
+        self.recordFrame = Frame(self.root, bg=self.colorList[2])
+        self.recordFrame.place(x=self.rF_x, y=self.rF_y, width=self.rF_w, height=self.rF_h)
+
+        scroll_y = Scrollbar(self.recordFrame, orient=VERTICAL)
+        scroll_x = Scrollbar(self.recordFrame, orient=HORIZONTAL)
+
+        self.Table = ttk.Treeview(self.recordFrame, columns=['id'{DATA 4}], yscrollcommand=scroll_y.set, xscrollcommand=scroll_x.set)
+        scroll_y.pack(side=RIGHT, fill=Y)
+        scroll_x.pack(side=BOTTOM, fill=X)
+        scroll_y.config(command=self.Table.yview)
+        scroll_x.config(command=self.Table.xview)
+        self.Table.heading('id', text='ID'){DATA 5}
+        self.Table["show"] = "headings"
+        self.Table.column('id', width=50){DATA 6}
+        self.Table.pack(fill=BOTH, expand=True)
+
+        # Status Frame
+        self.statusFrame = Frame(self.root, bg=self.colorList[2])
+        self.statusFrame.place(x=self.dFbFstF_x, y=self.stF_y, width=self.stF_w, height=self.stF_h)
+
+        self.lbl_status = Label(self.statusFrame, text='Status:', anchor=W, justify=LEFT, font=self.formset_mainF, bg=self.colorList[7], fg=self.colorList[8], highlightbackground=self.colorList[11], highlightthickness=2, highlightcolor=self.colorList[12])
+        self.lbl_status.place(x=0, y=0, width=self.stF_w, height=self.stF_h)
+
+        # After UI Creating
+        self.Table.bind("<ButtonRelease-1>", self.Get_Data)
+        self.Show()
+
+        def delete_Table():
+            r = messagebox.askyesno('Are You Sure', "Are You Sure You Want To Remove All Data Of This Form\nDon't Worry It Does Not Remove All Forms", parent=self.root)
+            if r == TRUE:
+                self.cur.execute(f"Drop Table {self.mainName.replace(' ', '_')}")
+                self.con.commit()
+                r_ = messagebox.askyesno('Success', f"All Data Were Removed From {self.mainName} Table\nAre You Want To Recreate Empty {self.mainName} Table Again", parent=self.root)
+                if r_ == TRUE:
+                    self.EnableDb()
+                    self.Clear()
+
+        menubar = Menu(self.root)
+        self.root.config(menu=menubar)
+
+        fileMenu = Menu(menubar)
+        fileMenu = Menu(fileMenu, background=self.colorList[2])
+        fileMenu.add_separator()
+        fileMenu.add_command(label="Save To PDF", command=self.export_pdf)
+        fileMenu.add_command(label="Save To Excel(CSV)", command=self.export_csv)
+        fileMenu.add_command(label="Save To Excel(XLSX)", command=self.export_excel)
+        fileMenu.add_command(label="Save To HTML", command=self.export_html)
+        fileMenu.add_command(label="Save To TXT", command=self.export_txt)
+        fileMenu.add_command(label="Copy To Clipboard", command=self.export_clip)
+        fileMenu.add_separator()
+        fileMenu.add_command(label="Import From CSV", command=lambda: self.import_csv(self.cmnset_msgboxAimp))
+        fileMenu.add_separator()
+        fileMenu.add_command(label="Remove All Records", command=delete_Table)
+        fileMenu.add_separator()
+        fileMenu.add_command(label="Exit", underline=0, command=self.root.destroy)
+        menubar.add_cascade(label="File", underline=0, menu=fileMenu)
+
+        moreMenu = Menu(menubar)
+        moreMenu = Menu(moreMenu, background=self.colorList[2])
+        moreMenu.add_separator()
+        moreMenu.add_command(label="Refresh ID", command=self.RefreshId)
+        moreMenu.add_command(label="Refresh Common Variable", command=lambda: self.CallCommonVar(1, 'Refresh'))
+        moreMenu.add_command(label="Refresh Common Setting", command=self.CallCommonSet)
+        moreMenu.add_separator()
+        moreMenu.add_command(label="Enable Database", command=self.EnableDb)
+        moreMenu.add_command(label="Disable Database", command=self.DisableDb)
+        moreMenu.add_separator()
+        def rT(s):
+            if s == 1:
+                self.cmnset_refT = 1
+            elif s == 0:
+                self.cmnset_refT = 0
+        moreMenu.add_command(label="Enable Refresh Thread", command=lambda: rT(1))
+        moreMenu.add_command(label="Disable Refresh Thread", command=lambda: rT(0))
+        menubar.add_cascade(label="More", underline=0, menu=moreMenu)
+
+        # menubar.add_cascade(label="Setting", underline=0, command=lambda: self.Refresh(thread_=0))
+        # menubar.add_cascade(label="Report", underline=0, command=lambda: self.Refresh(thread_=0))
+        menubar.add_cascade(label="Refresh", underline=0, command=lambda: self.Refresh(thread_=0))
+
+        self.Clear()
+        self.RefreshT('1')
+
+    def convertToBinaryData(self, filename):
+        with open(filename, 'rb') as file:
+            binaryData = file.read()
+        return binaryData
+
+    def _Add(self, e): self.Add()
+    def _Update(self, e): self.Update()
+    def _Delete(self, e): self.Delete()
+    def _Clear(self, e): self.Clear()
+    def _Import(self, e): self.Import()
+    def _Export(self, e): self.Export()
+
+    def Add(self):
+        try:
+            if self.var_id.get() == '':
+                messagebox.showerror('Error', 'ID IS REQUIRED', parent=self.root)
+                self.lbl_status.config(text=f'[Add Error] ID IS REQUIRED')
+                Log_Generator().addLog(f'[Add Error] ID IS REQUIRED'){DATA 22}
+            else:
+                self.cur.execute(f"select * from {self.mainName.replace(' ', '_')} where id='" + self.var_id.get() + "'")
+                row = self.cur.fetchone()
+                if row is not None:
+                    messagebox.showerror('Error', 'This ID is Already Assigned, Try New One', parent=self.root)
+                    Log_Generator().addLog(f'[Add Error] This ID is Already Assigned, Try New One')
+                else:
+                    self.cur.execute(f"insert into {self.mainName.replace(' ', '_')} VALUES (?{DATA 20})",(self.var_id.get(){DATA 7}))
+                    self.RefreshId()
+                    self.con.commit()
+                    if self.cmnset_msgboxAadd == 'True':
+                        r = messagebox.askyesno('Success', f'{self.mainName} Record {self.var_id.get()} Added Successfully\nAre You Want To Clear The Field', parent=self.root)
+                        Log_Generator().addLog(f'[Add] {self.mainName} Record {self.var_id.get()} Added Successfully')
+                        if r == TRUE:
+                            self.Clear()
+                        else:
+                            self.Show()
+                    elif self.cmnset_msgboxAadd == 'False':
+                        Log_Generator().addLog(f'[Add] {self.mainName} Record {self.var_id.get()} Added Successfully')
+                        if self.cmnset_Afteradd == 'Clear Record':
+                            self.Clear()
+                        else:
+                            self.Show()
+                Log_Generator().addLog(f'[Add] ID {self.var_id.get()} Added Successfully in {self.mainName} Table')
+                self.lbl_status.config(text=f'ID {self.var_id.get()} Added Successfully in {self.mainName} Table')
+        except Exception as ex:
+            Log_Generator().addLog(f'[Delete] ID {self.var_id.get()} Couldn\'t Added Error: {ex}')
+            self.lbl_status.config(text=f"ID {self.var_id.get()} Couldn't Added Error: {ex}")
+            messagebox.showerror('Error', ex, parent=self.root)
+
+    def Update(self):
+        try:
+            if self.var_id.get() == '':
+                Log_Generator().addLog(f'[Update Error] First Select The {self.mainName} Records From Treeview')
+                messagebox.showerror('Error', f'First Select The {self.mainName} Records From Treeview', parent=self.root){DATA 23}
+            else:
+                self.cur.execute(f"select * from {self.mainName.replace(' ', '_')} where id='" + self.var_id.get() + "'")
+                row = self.cur.fetchone()
+                if row == None:
+                    Log_Generator().addLog(f'[Update Error] Select The Correct {self.mainName} Record, Invalid Record ID')
+                    messagebox.showerror('Error', f'Select The Correct {self.mainName} Record, Invalid Record ID', parent=self.root)
+                else:
+                    self.cur.execute(f"update {self.mainName.replace(' ', '_')} set id=?{DATA 21} where id=?",(self.var_id.get(){DATA 8}, self.var_id.get()))
+                    self.con.commit()
+
+                    if self.cmnset_msgboxAupd == 'True':
+                        r = messagebox.askyesno('Success', f'{self.mainName} Record {self.var_id.get()} Updated Successfully\nAre You Want To Clear The Field', parent=self.root)
+                        Log_Generator().addLog(f'[Update] {self.mainName} Record {self.var_id.get()} Updated Successfully')
+                        if r == TRUE:
+                            self.Clear()
+                        else:
+                            self.Show()
+                    elif self.cmnset_msgboxAupd == 'False':
+                        Log_Generator().addLog(f'[Update] {self.mainName} Record {self.var_id.get()} Updated Successfully')
+                        if self.cmnset_Afterupd == 'Clear Record':
+                            self.Clear()
+                        else:
+                            self.Show()
+                Log_Generator().addLog(f'[Update] ID {self.var_id.get()} Updated Successfully in {self.mainName} Table')
+                self.lbl_status.config(text=f'ID {self.var_id.get()} Updated Successfully in {self.mainName} Table')
+        except Exception as ex:
+            Log_Generator().addLog(f'[Update Error] ID {self.var_id.get()} Couldn\'t Updated Error: {ex}')
+            self.lbl_status.config(text=f"ID {self.var_id.get()} Couldn't Updated Error: {ex}")
+            messagebox.showerror('Error', ex, parent=self.root)
+
+    def Delete(self):
+        try:
+            if self.var_id.get() == '':
+                messagebox.showerror('Error', 'First Select The Record That You Want To Delete From Treeview', parent=self.root)
+                Log_Generator().addLog(f'[Delete Error] First Select The Record That You Want To Delete From Treeview')
+            else:
+                self.cur.execute(f"select * from {self.mainName.replace(' ', '_')} where id='" + self.var_id.get() + "'")
+                row = self.cur.fetchone()
+                if row == None:
+                    Log_Generator().addLog(f'[Delete Error] Select The Correct Record, Invalid {self.mainName} Record')
+                    messagebox.showerror('Error', f'Select The Correct Record, Invalid {self.mainName} Record', parent=self.root)
+                else:
+
+                    if self.cmnset_msgboxAdel == 'True':
+                        op = messagebox.askyesno('Confirm', f'Do you really want to delete Record {self.var_id.get()}', parent=self.root)
+                        if op:
+                            self.cur.execute(f"delete from {self.mainName.replace(' ', '_')} where id='" + self.var_id.get() + "'")
+                            self.con.commit()
+                            r = messagebox.askyesno('Deleted', f'{self.mainName} ID {self.var_id.get()} Deleted Successfully\nAre You Want To Clear The Field', parent=self.root)
+                            if r == TRUE:
+                                self.Clear()
+                            else:
+                                self.Show()
+                            self.lbl_status.config(text=f'ID {self.var_id.get()} Deleted Successfully in {self.mainName} Table')
+                            Log_Generator().addLog(f'[Delete] ID {self.var_id.get()} Deleted Successfully in {self.mainName} Table')
+
+                    else:
+                        self.cur.execute(f"delete from {self.mainName.replace(' ', '_')} where id='" + self.var_id.get() + "'")
+                        self.con.commit()
+                        if self.cmnset_Afterdel == 'Clear Record':
+                            self.Clear()
+                        else:
+                            self.Show()
+                        self.lbl_status.config(text=f'ID {self.var_id.get()} Deleted Successfully in {self.mainName} Table')
+                        Log_Generator().addLog(f'[Delete] ID {self.var_id.get()} Deleted Successfully in {self.mainName} Table')
+        except Exception as ex:
+            self.lbl_status.config(text=f"ID {self.var_id.get()} Couldn't Deleted Error: {ex}")
+            Log_Generator().addLog(f'[Delete Error] ID {self.var_id.get()} Couldn\'t Deleted Error: {ex}')
+            messagebox.showerror('Error', ex, parent=self.root)
+
+    def Clear(self):
+        self.Refresh(0)
+        self.Show()
+        self.RefreshId(){DATA 9}
+
+        self.var_search_by.set('Select')
+        self.var_search_txt.set('')
+        self.lbl_status.config(text=f"Clear All Fields And Refresh Interface Successfully")
+        Log_Generator().addLog(f'[Clear] All Fields And Refresh Interface Successfully')
+
+    def Export(self):
+        tp_export = Toplevel()
+        tp_export.geometry("420x130+220+140")
+        tp_export.title(self.title)
+        tp_export.resizable(0, 0)
+        tp_export.config(bg=self.colorList[2])
+        tp_export.focus_force()
+        tp_export.iconbitmap(self.iconPath)
+
+        # -==== title =====- #
+        Label(tp_export, text='EXPORT', font=(self.formset_mainHF, 20, 'bold'), bg=self.colorList[7], fg=self.colorList[8], highlightbackground=self.colorList[11], highlightthickness=2, highlightcolor=self.colorList[12]).place(x=10, y=10, width=400, height=40)
+
+        # # ==== content ==== #
+        expFile_type = StringVar()
+        expFrom_list = ['Clipboard', 'Excel(CSV)', 'Excel(XLSX)', 'HTML', 'PDF', 'TXT']
+        Label(tp_export, text='EXPORT INTO', font=(self.formset_mainF, 15), bg=self.colorList[7], fg=self.colorList[8], highlightbackground=self.colorList[11], highlightthickness=2, highlightcolor=self.colorList[12]).place(x=10, y=55)
+        cmb_expFrom = AutocompleteCombobox(tp_export, values=expFrom_list, textvariable=expFile_type, font=(self.formset_mainF, 15), background=self.colorList[9], foreground=self.colorList[10])
+        cmb_expFrom.set_completion_list(expFrom_list)
+        cmb_expFrom.tk.eval(f'[ttk::combobox::PopdownWindow %s].f.l configure -background {self.colorList[13]}' % cmb_expFrom)
+        cmb_expFrom.place(x=150, y=55, width=260)
+        cmb_expFrom.current(4)
+
+        def save():
+            if expFile_type.get() == 'Clipboard':
+                self.export_clip()
+            elif expFile_type.get() == 'Excel(CSV)':
+                self.export_csv()
+            elif expFile_type.get() == 'Excel(XLSX)':
+                self.export_excel()
+            elif expFile_type.get() == 'HTML':
+                self.export_html()
+            elif expFile_type.get() == 'PDF':
+                self.export_pdf()
+            elif expFile_type.get() == 'TXT':
+                self.export_txt()
+
+        self.var_ename = StringVar()
+        txt_name = Entry(tp_export, textvariable=self.var_ename, border=0, font=self.formset_mainF, bg=self.colorList[9], fg=self.colorList[10], highlightbackground=self.colorList[11], highlightthickness=2, highlightcolor=self.colorList[12])
+        txt_name.place(x=10, y=90, width=280, height=35)
+
+        Entry(tp_export, border=0, font=self.formset_mainF, disabledbackground=self.colorList[9], state=DISABLED, disabledforeground=self.colorList[10]).place(x=290, y=90, width=120, height=35)
+        Button(tp_export, text='Export', command=save, justify=LEFT, font=(self.formset_mainF, 15), bd=0, cursor='hand2', bg=self.colorList[5], activeforeground=self.colorList[22], activebackground=self.colorList[21], fg=self.colorList[6]).place(x=295, y=95, width=110, height=25)
+
+    def Export_def(self):
+        gg = self.Table.get_children()
+        id = []{DATA 10}
+        count = 0
+        for i in gg:
+            content = self.Table.item(i)
+            pp = content['values']
+            count += 1
+            id.append(str(count)){DATA 11}
+
+        headings = ('ID'{DATA 12})
+        expList = list(zip(id{DATA 13}))
+        Log_Generator().addLog(f'[Export] {count} Record Found')
+        return count, headings, expList
+
+    def export_pdf(self):
+        def find_repsize(sta):
+            if self.repset_Size == 'A4':
+                if sta =='P':
+                    self.PAGESIZE = pagesizes.portrait(pagesizes.A4)
+                elif sta == 'L':
+                    self.PAGESIZE = pagesizes.landscape(pagesizes.A4)
+            if self.repset_Size == 'Multiple':
+                if self.pgrepset_u == 'mm':
+                    self.PAGESIZE = pagesizes.landscape(((int(self.pgrepset_w) * mm, int(self.pgrepset_h) * mm)))
+                elif self.pgrepset_u == 'inch':
+                    self.PAGESIZE = pagesizes.landscape(((int(self.pgrepset_w) * inch, int(self.pgrepset_h) * inch)))
+
+        if self.repset_Lrep_:find_repsize('L')
+        elif self.repset_Prep:find_repsize('P')
+
+        if self.repset_Sauto == 'True':
+            path_ = f'{self.repset_Sloc}\\Report'
+            try: os.mkdir(path_)
+            except: pass
+            now = datetime.now()
+            date_time = now.strftime("%d-%m-%Y, %H %M %S")
+            path = f'{path_}\\{self.mainName} Report {date_time}.pdf'
+        elif self.repset_Sauto == 'False':
+            path = filedialog.asksaveasfilename(title="SAVE REPORT IN PDF FORMAT", defaultextension=".pdf", parent=self.root)
+
+        pdf = SimpleDocTemplate(path, pagesize=self.PAGESIZE, topMargin=float(int(self.repset_tm)), bottomMargin=float(int(self.repset_bm)), leftMargin=float(int(self.repset_lm)), rightMargin=float(int(self.repset_rm)))
+
+        styles = getSampleStyleSheet()
+        try:
+            ename = self.var_ename.get()
+            if ename != "":
+                header = Paragraph(f"{ename}", styles['Heading1'])
+            else:
+                header = Paragraph(f"{self.title}", styles['Heading1'])
+        except:
+            header = Paragraph(f"{self.title}", styles['Heading1'])
+        flow_obj=[]
+        flow_obj.append(header)
+
+        count, headings, expList = self.Export_def()
+
+        t=Table([headings] + expList, hAlign='LEFT')
+        tstyle=TableStyle([
+                    ('GRID', (0, 0), (-1, -1), 1, abcdef.springgreen),
+                    ('LINEBELOW', (0, 0), (-1, 0), 2, abcdef.springgreen),
+                    ('BACKGROUND', (0, 0), (-1, 0), abcdef.springgreen),
+                    ('FONTSIZE', (0, 0), (-1, 0), 8),
+                    ('FONTSIZE', (0, 0), (-1, -1), 7)
+                        ])
+        t.setStyle(tstyle)
+        flow_obj.append(t)
+        footer = Paragraph("Total Records: "+str(count), styles['Heading2'])
+        flow_obj.append(footer)
+        pdf.build(flow_obj)
+        if self.cmnset_msgboxAexp == 'True':
+            messagebox.showinfo('Notifications', f'{self.mainName} Records Saved Successfully\n{path}', parent=self.root)
+        if self.repset_oras == 'True':
+            os.startfile(path)
+        self.lbl_status.config(text=f'Export: {count} Record Found And Exported At {path} Successfully')
+        Log_Generator().addLog(f'[Export] {count} Record Found And Exported At {path} Successfully')
+
+    def export_csv(self):
+        fFormat = 'csv'
+        if self.repset_Sauto == 'True':
+            path_ = f'{self.repset_Sloc}\\Report'
+            try: os.mkdir(path_)
+            except: pass
+            now = datetime.now()
+            date_time = now.strftime("%d-%m-%Y, %H %M %S")
+            path = f'{path_}\\{self.mainName} Report {date_time}.{fFormat}'
+        elif self.repset_Sauto == 'False':
+            path = filedialog.asksaveasfilename(title=f"SAVE REPORT IN {fFormat.swapcase()} FORMAT", defaultextension=f".{fFormat}", parent=self.root)
+
+        count, headings, expList = self.Export_def()
+        df = pandas.DataFrame(expList, columns=headings)
+        paths = r'{}'.format(path)
+        df.to_csv(paths, index=False)
+
+        if self.cmnset_msgboxAexp == 'True':
+            messagebox.showinfo('Notifications', f'{self.mainName} Records Saved Successfully\n{path}', parent=self.root)
+        if self.repset_oras == 'True':
+            os.startfile(paths)
+        self.lbl_status.config(text=f'Export: {count} Record Found And Exported At {path} Successfully')
+        Log_Generator().addLog(f'[Export] {count} Record Found And Exported At {path} Successfully')
+
+    def export_excel(self):
+        fFormat = 'xlsx'
+        if self.repset_Sauto == 'True':
+            path_ = f'{self.repset_Sloc}\\Report'
+            try:
+                os.mkdir(path_)
+            except:
+                pass
+            now = datetime.now()
+            date_time = now.strftime("%d-%m-%Y, %H %M %S")
+            path = f'{path_}\\{self.mainName} Report {date_time}.{fFormat}'
+        elif self.repset_Sauto == 'False':
+            path = filedialog.asksaveasfilename(title=f"SAVE REPORT IN {fFormat.swapcase()} FORMAT", defaultextension=f".{fFormat}", parent=self.root)
+
+        count, headings, expList = self.Export_def()
+        df = pandas.DataFrame(expList, columns=headings)
+        paths = r'{}'.format(path)
+        df.to_excel(paths, index=False)
+
+        if self.cmnset_msgboxAexp == 'True':
+            messagebox.showinfo('Notifications', f'{self.mainName} Records Saved Successfully\n{path}', parent=self.root)
+        if self.repset_oras == 'True':
+            os.startfile(paths)
+        self.lbl_status.config(text=f'Export: {count} Record Found And Exported At {path} Successfully')
+        Log_Generator().addLog(f'[Export] {count} Record Found And Exported At {path} Successfully')
+
+    def export_html(self):
+        fFormat = 'html'
+        if self.repset_Sauto == 'True':
+            path_ = f'{self.repset_Sloc}\\Report'
+            try:
+                os.mkdir(path_)
+            except:
+                pass
+            now = datetime.now()
+            date_time = now.strftime("%d-%m-%Y, %H %M %S")
+            path = f'{path_}\\{self.mainName} Report {date_time}.{fFormat}'
+        elif self.repset_Sauto == 'False':
+            path = filedialog.asksaveasfilename(title=f"SAVE REPORT IN {fFormat.swapcase()} FORMAT", defaultextension=f".{fFormat}", parent=self.root)
+
+        count, headings, expList = self.Export_def()
+        df = pandas.DataFrame(expList, columns=headings)
+        paths = r'{}'.format(path)
+        df.to_html(paths, index=False)
+
+        if self.cmnset_msgboxAexp == 'True':
+            messagebox.showinfo('Notifications', f'{self.mainName} Records Saved Successfully\n{path}', parent=self.root)
+        if self.repset_oras == 'True':
+            os.startfile(paths)
+        self.lbl_status.config(text=f'Export: {count} Record Found And Exported At {path} Successfully')
+        Log_Generator().addLog(f'[Export] {count} Record Found And Exported At {path} Successfully')
+
+    def export_txt(self):
+        fFormat = 'txt'
+        if self.repset_Sauto == 'True':
+            path_ = f'{self.repset_Sloc}\\Report'
+            try:
+                os.mkdir(path_)
+            except:
+                pass
+            now = datetime.now()
+            date_time = now.strftime("%d-%m-%Y, %H %M %S")
+            path = f'{path_}\\{self.mainName} Report {date_time}.{fFormat}'
+        elif self.repset_Sauto == 'False':
+            path = filedialog.asksaveasfilename(title=f"SAVE REPORT IN {fFormat.swapcase()} FORMAT", defaultextension=f".{fFormat}", parent=self.root)
+
+        count, headings, expList = self.Export_def()
+        df = pandas.DataFrame(expList, columns=headings)
+        a = df.to_string(index=False)
+        paths = r'{}'.format(path)
+        f = open(paths, 'w')
+        f.write(a)
+        f.close()
+
+        if self.cmnset_msgboxAexp == 'True':
+            messagebox.showinfo('Notifications', f'{self.mainName} Records Saved Successfully\n{path}', parent=self.root)
+        if self.repset_oras == 'True':
+            os.startfile(paths)
+        self.lbl_status.config(text=f'Export: {count} Record Found And Exported At {path} Successfully')
+        Log_Generator().addLog(f'[Export] {count} Record Found And Exported At {path} Successfully')
+
+    def export_clip(self):
+        count, headings, expList = self.Export_def()
+        df = pandas.DataFrame(expList, columns=headings)
+        df.to_clipboard(index=False)
+
+        if self.cmnset_msgboxAexp == 'True':
+            messagebox.showinfo('Notifications', f'{self.mainName} Records Copied To Clipboard Successfully', parent=self.root)
+        self.lbl_status.config(text=f'Export: {count} Record Found And Copied To Clipboard Successfully')
+        Log_Generator().addLog(f'[Export] {count} Record Found And Copied To Clipboard Successfully')
+
+    def Import(self):
+        tp_import = Toplevel()
+        tp_import.geometry("1020x325+220+140")
+        tp_import.title(self.title)
+        tp_import.resizable(0, 0)
+        tp_import.config(bg=self.colorList[2])
+        tp_import.focus_force()
+        tp_import.iconbitmap(self.iconPath)
+
+        # -==== title =====- #
+        Label(tp_import, text='IMPORT', font=(self.formset_mainHF, 20, 'bold'), bg=self.colorList[7], fg=self.colorList[8], highlightbackground=self.colorList[11], highlightthickness=2, highlightcolor=self.colorList[12]).place(x=10, y=10, width=1000, height=40)
+
+        # ==== content ==== #
+        impFile_type = StringVar()
+        impFrom_list = ['Excel(CSV)']
+        Label(tp_import, text='IMPORT FROM', font=(self.formset_mainF, 15), bg=self.colorList[7], fg=self.colorList[8], highlightbackground=self.colorList[11], highlightthickness=2, highlightcolor=self.colorList[12]).place(x=10, y=55)
+        cmb_impFrom = AutocompleteCombobox(tp_import, values=impFrom_list, textvariable=impFile_type, font=(self.formset_mainF, 15), background=self.colorList[9], foreground=self.colorList[10])
+        cmb_impFrom.set_completion_list(impFrom_list)
+        cmb_impFrom.tk.eval(f'[ttk::combobox::PopdownWindow %s].f.l configure -background {self.colorList[13]}' % cmb_impFrom)
+        cmb_impFrom.place(x=155, y=55, width=855)
+        cmb_impFrom.current(0)
+
+        txt_Frame = Frame(tp_import, bg=self.colorList[3])
+        txt_Frame.place(x=10, y=90, width=1000, height=175)
+
+        scroll_y2 = Scrollbar(txt_Frame, orient=VERTICAL)
+        txt_import = Text(txt_Frame, font=(self.formset_mainF, 15), bg=self.colorList[9], fg=self.colorList[10], highlightbackground=self.colorList[11], highlightthickness=2, highlightcolor=self.colorList[12], yscrollcommand=scroll_y2.set)
+        scroll_y2.pack(side=RIGHT, fill=Y)
+        scroll_y2.config(command=txt_import.yview)
+        txt_import.pack(fill=BOTH, expand=1)
+        txt_import.insert(END, "Are You Sure You Want To Import CSV File\nDon't Worry It's Not Delete Your Previous Data\nMake Sure Your First Row (Header) Is Empty Or With Column Names\nMake Sure Your First Column Is A Sr No Or Empty\nThe Program Not Copy First Row And First Column\nMake Sure Your Column Are Sorted According To\nId{DATA 15}")
+
+        def save():
+            if impFile_type.get() == 'Excel(CSV)':
+                self.import_csv(self.cmnset_msgboxAimp)
+
+        Entry(tp_import, border=0, font=self.formset_mainF, disabledbackground=self.colorList[9], state=DISABLED, disabledforeground=self.colorList[10]).place(x=890, y=270, width=120, height=35)
+        Button(tp_import, text='Import', command=save, justify=LEFT, font=(self.formset_mainF, 15), bd=0, cursor='hand2', bg=self.colorList[5], activeforeground=self.colorList[22], activebackground=self.colorList[21], fg=self.colorList[6]).place(x=895, y=275, width=110, height=25)
+
+    def import_csv(self, m):
+        def _imp():
+            try:
+                ff = filedialog.askopenfilename(parent=self.root, title='Open CSV File', filetypes=(('CSV File', '*.csv'), ('All Files', '*.*')))
+                a_file = open(ff)
+                rows = csv.reader(a_file)
+                next(rows, None)
+                rows = list(rows)
+                id_count = 0
+                try:
+                    self.cur.execute(f"select id from {self.mainName.replace(' ', '_')}")
+                    self.con.commit()
+                    row = self.cur.fetchall()
+                    for i in row:
+                        for i in i:
+                            pass
+                    id_count = i + 1
+                except:
+                    id_count = int(self.cmnset_id)
+                for i in rows:
+                    self.cur.execute(f"insert into {self.mainName.replace(' ', '_')} values('" + str(id_count) + "'{DATA 14})")
+                    id_count += 1
+                    self.con.commit()
+                self.lbl_status.config(text=f'Import: {len(rows)} Record Found And Imported To Database Successfully')
+                Log_Generator().addLog(f'[Import] {len(rows)} Record Found And Imported To Database Successfully')
+                self.Show()
+            except Exception as ex:
+                self.lbl_status.config(text=f"While Importing {self.mainName} Record We Found Error: {ex}")
+                messagebox.showerror('Error', ex, parent=self.root)
+                Log_Generator().addLog(f'[Import] {self.mainName} Record We Found Error: {ex}')
+
+        if m == 'False':_imp()
+        else:
+            msg = messagebox.askyesno('Are You Sure', "Are You Sure You Want To Import CSV File\nDon't Worry It's Not Delete Your Previous Data", parent=self.root)
+            if msg:
+                if self.cmnset_msgboxAimp == 'True':
+                    messagebox.showinfo('Read Me', "Make Sure Your First Row (Header) Is Empty Or With Column Names\nMake Sure Your First Column Is A Sr No Or Empty\nThe Program Not Copy First Row And First Column\nMake Sure Your Column Are Sorted According To\nId{DATA 15}", parent=self.root)
+                    _imp()
+
+    def Search(self, e):
+        try:
+            if self.var_search_by.get() == 'Select':
+                messagebox.showerror('Error', 'Select Search By option', parent=self.root)
+            else:
+                if self.var_search_by.get() == 'ID':
+                    search_by = 'id'{DATA 16}
+                self.cur.execute(f"select * from {self.mainName.replace(' ', '_')} where " + search_by + " LIKE '%" + self.var_search_txt.get() + "%'")
+                rows = self.cur.fetchall()
+                try:
+                    rows.sort(key=lambda x: {Order By})
+                except:
+                    pass
+                if len(rows) != 0:
+                    self.lbl_status.config(text='')
+                    self.Table.delete(*self.Table.get_children())
+                    for row in rows:
+                        self.Table.insert('', END, values=row)
+                    self.lbl_status.config(text=f'Search: {len(rows)} Record Found')
+                    Log_Generator().addLog(f'[Search] {len(rows)} Record Found')
+                else:
+                    if self.var_search_txt.get() == '':
+                        pass
+                    else:
+                        self.Table.delete(*self.Table.get_children())
+                        self.lbl_status.config(text='Search: No Record Found')
+                        Log_Generator().addLog(f'[Search] No Record Found')
+        except Exception as ex:
+            Log_Generator().addLog(f'While Searching {self.mainName} Record We Found Error: {ex}')
+            self.lbl_status.config(text=f"While Searching {self.mainName} Record We Found Error: {ex}")
+            messagebox.showerror('Error', ex, parent=self.root)
+
+    def Show(self):
+        try:
+            self.cur.execute(f"select * from {self.mainName.replace(' ', '_')}")
+            rows = self.cur.fetchall()
+            self.Table.delete(*self.Table.get_children())
+            try:
+                rows.sort(key=lambda x: {Order By})
+            except:
+                pass
+            for row in rows:
+                self.Table.insert('', END, values=row)
+
+            self.lbl_status.config(text=f"{self.mainName} Record Fetch Successfully")
+            Log_Generator().addLog(f'[{self.mainName}] Record Fetch Successfully')
+        except Exception as ex:
+            Log_Generator().addLog(f'While Fetching {self.mainName} Record We Found Error: {ex}')
+            self.lbl_status.config(text=f"While Fetching {self.mainName} Record We Found Error: {ex}")
+            messagebox.showerror('Error', ex, parent=self.root)
+
+    def Get_Data(self, e):
+        try:
+            f = self.Table.focus()
+            content = (self.Table.item(f))
+            row = content['values']
+            self.var_id.set(row[0]){DATA 17}
+
+            self.lbl_status.config(text=f"Record {self.var_id.get()} Selected Successfully")
+            Log_Generator().addLog(f'[Data Get] Successfully')
+        except:
+            pass
+
+    def RefreshId(self):
+        try:
+            self.cur.execute(f"select id from {self.mainName.replace(' ', '_')}")
+            self.con.commit()
+            row = self.cur.fetchall()
+            for i in row:
+                for i in i:
+                    pass
+            self.var_id.set(i + 1)
+        except:
+            self.var_id.set(int(self.cmnset_id))
+        Log_Generator().addLog(f'[ID Refresh] Successfully')
+
+    def CallCommonVar(self, height_, sta):
+        if sta == 'Refresh':
+            f = open(f'{self.setting_folder}\\Form Setting', 'r')
+            form_set = f.readlines()
+            f.close()
+
+            lineNo = 0
+            _, self.frmset_sfh = form_set[lineNo].strip('\n').split(':')
+            self.frmset_sfh, *_ = self.frmset_sfh.split('.')
+            lineNo += 1
+            _, self.frmset_stfh = form_set[lineNo].strip('\n').split(':')
+            self.frmset_stfh, *_ = self.frmset_stfh.split('.')
+            lineNo += 1
+            _, self.frmset_bdfw = form_set[lineNo].strip('\n').split(':')
+            self.frmset_bdfw, *_ = self.frmset_bdfw.split('.')
+            lineNo += 1
+            _, self.frmset_bfh = form_set[lineNo].strip('\n').split(':')
+            self.frmset_bfh, *_ = self.frmset_bfh.split('.')
+
+        # common variables
+        self.sF_h = int(self.frmset_sfh)  # Search Frame Height
+        self.dFsF_y = 20  # Detail Frame And Search Frame Y
+        self.dFbFstF_x = 0  # Detail Frame And Button Frame And Status Frame X
+        self.stF_h = int(self.frmset_stfh)  # Status Frame Height
+
+        self.dFbF_w = int(self.frmset_bdfw)
+        self.rF_y = self.dFsF_y + self.sF_h + 1  # Record Frame Y
+        self.stF_w = self.mainW  # Status Frame Width
+        self.rF_w = self.mainW - self.dFbF_w  # Record Frame Width
+        self.rF_h = self.mainH - self.rF_y - self.stF_h - height_ - 1  # Detail Frame and Record Frame Height -1 because we add 1 in stF_y
+        self.bF_h = int(self.frmset_bfh)  # Button Frame Height
+
+        self.dF_h = self.mainH - self.dFsF_y - self.bF_h - self.stF_h - height_ - 2
+        self.bF_y = self.dFsF_y + self.dF_h + 1
+        self.sF_w = self.mainW - self.dFbF_w  # Search Frame Width
+        self.rF_x = self.dFbF_w + 1
+        self.stF_y = self.rF_y + self.rF_h + 1  # Status Frame Y
+
+    def CallCommonSet(self):
+        f = open(f'{self.setting_folder}\\Common Setting', 'r')
+        common_set = f.readlines()
+        f.close()
+
+        lineNo = 0
+        _, self.cmnset_msgboxAadd = common_set[lineNo].strip('\n').split(':')
+        self.cmnset_msgboxAadd, *_ = self.cmnset_msgboxAadd.split('.')
+
+        lineNo += 1
+        _, self.cmnset_Afteradd = common_set[lineNo].strip('\n').split(':')
+        self.cmnset_Afteradd, *_ = self.cmnset_Afteradd.split('.')
+
+        lineNo += 1
+        _, self.cmnset_msgboxAupd = common_set[lineNo].strip('\n').split(':')
+        self.cmnset_msgboxAupd, *_ = self.cmnset_msgboxAupd.split('.')
+
+        lineNo += 1
+        _, self.cmnset_Afterupd = common_set[lineNo].strip('\n').split(':')
+        self.cmnset_Afterupd, *_ = self.cmnset_Afterupd.split('.')
+
+        lineNo += 1
+        _, self.cmnset_msgboxAdel = common_set[lineNo].strip('\n').split(':')
+        self.cmnset_msgboxAdel, *_ = self.cmnset_msgboxAdel.split('.')
+
+        lineNo += 1
+        _, self.cmnset_Afterdel = common_set[lineNo].strip('\n').split(':')
+        self.cmnset_Afterdel, *_ = self.cmnset_Afterdel.split('.')
+
+        lineNo += 1
+        _, self.cmnset_msgboxAimp = common_set[lineNo].strip('\n').split(':')
+        self.cmnset_msgboxAimp, *_ = self.cmnset_msgboxAimp.split('.')
+
+        lineNo += 1
+        _, self.cmnset_msgboxAexp = common_set[lineNo].strip('\n').split(':')
+        self.cmnset_msgboxAexp, *_ = self.cmnset_msgboxAexp.split('.')
+
+        lineNo += 1
+        _, self.cmnset_refA = common_set[lineNo].strip('\n').split(':')
+        self.cmnset_refA, *_ = self.cmnset_refA.split('.')
+
+        lineNo += 1
+        _, self.cmnset_y_space = common_set[lineNo].strip('\n').split(':')
+        self.cmnset_y_space, *_ = self.cmnset_y_space.split('.')
+
+        lineNo += 1
+        _, self.cmnset_f_w = common_set[lineNo].strip('\n').split(':')
+        self.cmnset_f_w, *_ = self.cmnset_f_w.split('.')
+
+        lineNo += 1
+        _, self.cmnset_f_x = common_set[lineNo].strip('\n').split(':')
+        self.cmnset_f_x, *_ = self.cmnset_f_x.split('.')
+
+        lineNo += 1
+        _, self.cmnset_refT = common_set[lineNo].strip('\n').split(':')
+        self.cmnset_refT, *_ = self.cmnset_refT.split('.')
+
+        lineNo += 1
+        _, self.cmnset_id = common_set[lineNo].strip('\n').split(':')
+        self.cmnset_id, *_ = self.cmnset_id.split('.')
+
+    def CallReportSet(self):
+        f = open(f'{self.setting_folder}\\Report Setting', 'r')
+        report_set = f.readlines()
+        f.close()
+
+        lineNo = 0
+        _, self.repset_Sauto = report_set[lineNo].strip('\n').split(':')
+        self.repset_Sauto, *_ = self.repset_Sauto.split('.')
+
+        lineNo += 1
+        _, self.repset_Sloc = report_set[lineNo].strip('\n').split(':')
+        self.repset_Sloc, *_ = self.repset_Sloc.split('.')
+        fn, fl = self.repset_Sloc.split('+')
+
+        f = open(f'{self.setting_folder}\\{fn}.fl', 'r')
+        self.repset_Sloc = f.readlines(1)
+        f.close()
+        self.repset_Sloc = self.repset_Sloc[0].strip('\n')
+
+        lineNo += 1
+        _, self.repset_Lrep = report_set[lineNo].strip('\n').split(':')
+        self.repset_Lrep, *_ = self.repset_Lrep.split('.')
+        self.repset_Lrep = self.repset_Lrep.replace('[','')
+        self.repset_Lrep = self.repset_Lrep.replace(']','')
+        self.repset_Lrep = self.repset_Lrep.split(',')
+        for i in self.repset_Lrep:
+            if i == self.mainName:
+                self.repset_Lrep_ = True
+                break
+            else:
+                self.repset_Lrep_ = False
+
+        lineNo += 1
+        _, self.repset_Prep = report_set[lineNo].strip('\n').split(':')
+        self.repset_Prep, *_ = self.repset_Prep.split('.')
+        self.repset_Prep = self.repset_Prep.replace('[','')
+        self.repset_Prep = self.repset_Prep.replace(']','')
+        self.repset_Prep = self.repset_Prep.split(',')
+        for i in self.repset_Prep:
+            if i == self.mainName:
+                self.repset_Prep_ = True
+                break
+            else:
+                self.repset_Prep_ = False
+
+        lineNo += 1
+        _, self.repset_Size = report_set[lineNo].strip('\n').split(':')
+        self.repset_Size, *_ = self.repset_Size.split('.')
+
+        lineNo += 1
+        _, self.repset_tm = report_set[lineNo].strip('\n').split(':')
+        self.repset_tm, *_ = self.repset_tm.split('.')
+
+        lineNo += 1
+        _, self.repset_bm = report_set[lineNo].strip('\n').split(':')
+        self.repset_bm, *_ = self.repset_bm.split('.')
+
+        lineNo += 1
+        _, self.repset_lm = report_set[lineNo].strip('\n').split(':')
+        self.repset_lm, *_ = self.repset_lm.split('.')
+
+        lineNo += 1
+        _, self.repset_rm = report_set[lineNo].strip('\n').split(':')
+        self.repset_rm, *_ = self.repset_rm.split('.')
+
+        lineNo += 1
+        _, self.repset_oras = report_set[lineNo].strip('\n').split(':')
+        self.repset_oras, *_ = self.repset_oras.split('.')
+
+    def CallPGReportSet(self):
+        f = open(f'{self.setting_folder}\\Pages Setting Report.sv', 'r')
+        report_set = f.readlines()
+        f.close()
+
+        for i in report_set:
+            mn, pgrepset_ = i.strip('\n').split(':')
+            if mn == self.mainName:
+                self.pgrepset_w, self.pgrepset_h,self.pgrepset_u = pgrepset_.split('.')
+
+    def RefreshT(self, thread_):
+        if thread_ == '1':
+            x = threading.Thread(target=self.Refresh, args=(1,))
+            x.start()
+        elif thread_ == '0':
+            Log_Generator().addLog(f'[Refresh] Thread Stopped')
+
+    def Refresh(self, thread_):
+        self.root.update()
+        self.mainW = self.root.winfo_width()
+        self.mainH = self.root.winfo_height()
+
+        if thread_ == 0:
+            self.CallCommonSet()
+            self.CallReportSet()
+            self.CallPGReportSet()
+            self.RefreshId()
+            Log_Generator().addLog(f'[After Refresh]\t[Root Width] {self.mainW}, [Root Height] {self.mainH}')
+            self.CallCommonVar(1, 'Refresh')
+
+        if thread_ == 1:
+            self.CallCommonVar(1,'1')
+
+        self.detailFrame.place_forget()
+        self.detailFrame.place_configure(x=self.dFbFstF_x, y=self.dFsF_y, width=self.dFbF_w, height=self.dF_h)
+
+        self.buttonFrame.place_forget()
+        self.buttonFrame.place(x=self.dFbFstF_x, y=self.bF_y, width=self.dFbF_w, height=self.bF_h)
+
+        self.searchFrame.place_forget()
+        self.searchFrame.place(x=self.dFbF_w + 1, y=self.dFsF_y, width=self.sF_w, height=self.sF_h)
+
+        self.recordFrame.place_forget()
+        self.recordFrame.place(x=self.rF_x, y=self.rF_y, width=self.rF_w, height=self.rF_h)
+
+        self.statusFrame.place_forget()
+        self.statusFrame.place(x=self.dFbFstF_x, y=self.stF_y, width=self.stF_w, height=self.stF_h)
+        self.lbl_status.place_forget()
+        self.lbl_status.place_configure(x=0, y=0, width=self.stF_w, height=self.stF_h)
+
+        if thread_ == 1:
+            if self.cmnset_refT == 'True':
+                self.root.after(int(self.cmnset_refA), lambda: self.RefreshT('1'))
+            elif self.cmnset_refT == 'False':
+                self.root.after(int(self.cmnset_refA), lambda: self.RefreshT('0'))
+
+    def EnableDb(self):
+        try:
+            open_db_set = open(self.setting_folder + '\\Database Configurations', 'r')
+            txt_db_set = open_db_set.readlines()
+            open_db_set.close()
+            _, db_type = txt_db_set[0].strip('\n').split(':')
+            db_type, *_ = db_type.split('.')
+            Log_Generator().addLog(f'[Database] {db_type}', )
+
+            if db_type == 'sqlite':
+                try:
+                    self.con = sqlite3.connect(database=self.database)
+                    self.cur = self.con.cursor()
+                    Log_Generator().addLog('[Database] Connected with sqlite')
+
+                    try:
+                        self.cur.execute('''CREATE TABLE IF NOT EXISTS "''' + self.mainName.replace(' ', '_') + '''" (
+                            "id"	INTEGER NOT NULL UNIQUE,{DATA 18}
+                            PRIMARY KEY("id" AUTOINCREMENT)
+                        )
+                        ''')
+                        self.con.commit()
+                        self.lbl_status.config(text='Database: Enabled')
+                        Log_Generator().addLog('[Database] Enabled')
+                    except Exception as e:
+                        Log_Generator().addLog(f'[DB Error] {e}')
+
+                except Exception as e:
+                    Log_Generator().addLog(f'[DB Error] {e}')
+                    messagebox.showerror('Error', str(e) + '\n\nContact With Creator +923150490481', parent=self.root)
+
+            elif db_type == 'mysql':
+                _, host_ = txt_db_set[1].strip('\n').split(':')
+                host_, *_ = db_type.split('.')
+                _, user_ = txt_db_set[2].strip('\n').split(':')
+                user_, *_ = db_type.split('.')
+                _, password_ = txt_db_set[3].strip('\n').split(':')
+                password_, *_ = db_type.split('.')
+
+                db_login = False
+                try:
+                    self.con = pymysql.connect(host=host_, user=user_, passwd=password_)
+                    self.cur = self.con.cursor()
+                    Log_Generator().addLog('[Database] Login successfully')
+                    db_login = True
+                except Exception as e:
+                    db_login = False
+                    Log_Generator().addLog(f'[DB Error] {e}')
+                    messagebox.showerror('Error', str(e) + '\n\nContact With Creator +923150490481', parent=self.root)
+
+                if db_login:
+                    try:
+                        self.cur.execute('use AS_DB')
+                        Log_Generator().addLog(f'[Database] Connected with mysql')
+                    except Exception as e:
+                        self.cur.execute('create database AS_DB')
+                        self.cur.execute('use AS_DB')
+                        Log_Generator().addLog(f'[Database] Created and Connected with mysql')
+
+                    try:
+                        self.cur.execute(
+                            '''CREATE TABLE IF NOT EXISTS ''' + self.mainName.replace(' ', '_') + ''' ( id SERIAL NOT NULL AUTO_INCREMENT {DATA 19} )''')
+                        self.con.commit()
+                        self.lbl_status.config(text='Database: Enabled')
+                        Log_Generator().addLog('[Database] Enabled')
+                    except Exception as e:
+                        Log_Generator().addLog(f'[DB Error] {e}')
+                else:
+                    messagebox.showerror('Error',
+                                         'Enter Correct Database Credentials We are not able to Login Database\n\nContact With Creator +923150490481',
+                                         parent=self.root)
+                    Log_Generator().addLog(f'[DB Error] Wrong Credentials You Enter')
+                    # Call DB Settings
+
+            else:
+                messagebox.showerror('Error',
+                                     'Select Database We Cannot Find Any Database\n\nContact With Creator +923150490481',
+                                     parent=self.root)
+                Log_Generator().addLog(f'[DB Error] Cannot Find Database Setting')
+                # Call DB Settings
+        except Exception as e:
+            Log_Generator().addLog(f'[DB Error] {e}')
+            messagebox.showerror('Error', str(e) + '\n\nContact With Creator +923150490481', parent=self.root)
+
+    def DisableDb(self):
+        self.cur.close()
+        self.con.close()
+        self.lbl_status.config(text='Database: Disabled')
+        Log_Generator().addLog('[Database] Disabled')
+
+
+if __name__ == '__main__':
+    root = Tk()
+    obj = [cName](root)
+    root.mainloop()
+    Log_Generator().closeLog()

@@ -1,0 +1,100 @@
+# create a self.notebook
+self.notebook = ttk.Notebook(self.recordFrame)
+self.notebook.pack(fill=BOTH, expand=TRUE)
+
+{tName}_frame=Frame(self.notebook, bg=self.colorList[2])
+{tName}_frame.pack(fill=BOTH, expand=TRUE)
+self.notebook.add({tName}_frame, text='{tTitle}')
+
+scrooll_y=Scrollbar({tName}_frame,orient=VERTICAL)
+scrooll_x=Scrollbar({tName}_frame,orient=HORIZONTAL)
+
+self.{tName} = ttk.Treeview({tName}_frame, columns=['id'{DATA 1}], yscrollcommand=scrooll_y.set, xscrollcommand=scrooll_x.set)
+scrooll_y.pack(side=RIGHT, fill=Y)
+scrooll_x.pack(side=BOTTOM, fill=X)
+scrooll_y.config(command=self.{tName}.yview)
+scrooll_x.config(command=self.{tName}.xview)
+self.{tName}.heading('id', text='ID'){DATA 2}
+self.{tName}["show"] = "headings"
+self.{tName}.column('id', width=50){DATA 3}
+self.{tName}.pack(fill=BOTH, expand=True)
+
+self.{tName}.bind("<ButtonRelease-1>", self.Get_Data_{tName})
+self.Show_{tName}()
+
+Table_frame=Frame(self.notebook, bg=self.colorList[2])
+Table_frame.pack(fill=BOTH, expand=TRUE)
+self.notebook.add(Table_frame, text='Record')
+
+def Show_{tName}(self):
+    try:
+        self.cur.execute("select id{DATA 4} from {tName}{DATA 5}")
+        rows=self.cur.fetchall()
+        self.{tName}.delete(*self.{tName}.get_children())
+        try:
+            rows.sort(key=lambda x: x[{ord}])
+        except:
+            pass
+        for row in rows:
+            self.{tName}.insert('', END, values=row)
+
+        Log_Generator().addLog(f'[{self.mainName}] Record Fetch Successfully')
+    except Exception as ex:
+        Log_Generator().addLog(f'While Fetching {self.mainName} Record We Found Error: {ex}')
+        messagebox.showerror('Error', ex, parent=self.root)
+
+def Get_Data_{tName}(self, e):
+    try:
+        f=self.{tName}.focus()
+        content=(self.{tName}.item(f))
+        row=content['values']
+        self.var_id.set(row[0]){DATA 6}
+
+        self.lbl_status.config(text=f"Record {self.var_id.get()} Selected Successfully")
+        Log_Generator().addLog(f'[Data Get] Successfully')
+    except:
+        pass
+
+def Search_{tName}(self):
+    try:
+        if self.var_search_by.get() == 'Select':
+            messagebox.showerror('Error', 'Select Search By option', parent=self.root)
+        else:
+            if self.var_search_by.get() == 'ID':
+                search_by = 'id'{DATA 7}
+            self.cur.execute(f"select id{DATA 4} from {tName} where " + search_by + " LIKE '%" + self.var_search_txt.get() + "%'{DATA 5}")
+            rows = self.cur.fetchall()
+            try:
+                rows.sort(key=lambda x: x[{ord}])
+            except:
+                pass
+            if len(rows) != 0:
+                self.lbl_status.config(text='')
+                self.{tName}.delete(*self.{tName}.get_children())
+                for row in rows:
+                    self.{tName}.insert('', END, values=row)
+                self.lbl_status.config(text=f'Search: {len(rows)} Record Found')
+                Log_Generator().addLog(f'[Search] {len(rows)} Record Found')
+            else:
+                if self.var_search_txt.get() == '':
+                    pass
+                else:
+                    self.{tName}.delete(*self.{tName}.get_children())
+                    self.lbl_status.config(text='Search: No Record Found')
+                    Log_Generator().addLog(f'[Search] No Record Found')
+    except Exception as ex:
+        Log_Generator().addLog(f'While Searching {self.mainName} Record We Found Error: {ex}')
+        self.lbl_status.config(text=f"While Searching {self.mainName} Record We Found Error: {ex}")
+        messagebox.showerror('Error', ex, parent=self.root)
+
+def Search(self, e):
+    if self.notebook.index("current")==0:
+        self.Search_{tName}()
+    if self.notebook.index("current")==1:
+        self.Search_()
+
+# Paste It Into Search Combobox Data
+{DATA 8}
+
+# For Update And Delete
+if self.notebook.index("current") == 1:

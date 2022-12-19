@@ -1,0 +1,42 @@
+Date,dat_,1,100,0
+Region,reg_,2,150,1
+Institute Name,ins_,3,300,1
+Department,dep_,4,100,1
+System Desc,sys_,5,100,0
+Warranty,war_,6,100,0
+Warranty Expire,wrp_,7,100,0
+Fault Reporter,frp_,8,100,0
+Fault Reported,frd_,9,100,0
+Part No,ptn_,10,100,1
+Serial No,srn_,11,100,1
+Engineer Name 1,en1_,12,100,0
+Engineer Name 2,en2_,13,100,0
+Complaint Status,jst_,14,100,0
+From,pfr_,15,100,0
+Send Request,snr_,16,100,0
+Request Date,rqd_,17,100,0
+Reply,rep_,18,100,0
+Reply Date,rpd_,19,100,0
+Quotation Send,qsd_,20,100,0
+Purchase Order,pro_,21,100,0
+Part Order Date,pod_,22,100,0
+Part Received,prd_,23,100,0
+Part No 2,pt2_,24,100,0
+Serial No 2,sr2_,25,100,0
+Letter For Approval,lfa_,26,100,0
+Customer Approval,csa_,27,100,0
+Description,des_,28,200,0
+RMA No,rma_,29,100,0
+RMA Date,rmd_,30,100,0
+Sending Date,snd_,31,100,0
+Warranty Claim,wrc_,32,100,0
+Warranty Claim,wcj_,33,100,0
+Sys Received,srd_,34,100,0
+Sys Part No,spn_,35,100,0
+Sys Serial No,ssn_,36,100,0
+Sending Date,sdt_,37,100,0
+Reference,ref_,38,100,0
+LM Receiving Date,lmr_,39,100,0
+Repairing Charges,rpc_,40,100,0
+Remarks,rem_,41,100,0
+Job Done Date,jdd_,42,100,0

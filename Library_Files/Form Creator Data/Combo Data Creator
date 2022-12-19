@@ -1,0 +1,21 @@
+def _{old}(e): {old}()
+def {old}():
+    try:
+        self.cur.execute(f"select {new} from {tName} where {old}='" + self.var_{old}.get() + "'")
+        {lbl}_{new}.set("")
+        self.var_{new}.set("")
+        {lbl}_{new}.delete({lbl}_{new}.get()){DATA 1}
+        fetch = self.cur.fetchall()
+        without_bracket = []
+        for i in fetch:
+            without_bracket.append(str(i[0]))
+            without_bracket = list(dict.fromkeys(without_bracket))
+            without_bracket.sort()
+            {lbl}_{new}.config(values=without_bracket)
+            {lbl}_{new}_list = without_bracket
+            {lbl}_{new}.set_completion_list({lbl}_{new}_list)
+        self.con.commit()
+    except Exception as e:
+        Log_Generator().addLog(f'[Combobox Error] {e}')
+        self.lbl_status.config(text=f'[Combobox Error] {e}')
+cmb_{old}.bind('<<ComboboxSelected>>', _{old})

@@ -1,0 +1,17 @@
+try:
+    self.cur.execute("select {new} from {tName}")
+    cmb_{new}.set("")
+    self.var_{new}.set("")
+    cmb_{new}.delete(cmb_{new}.get()){DATA 1}
+    fetch = self.cur.fetchall()
+    without_bracket=[]
+    for i in fetch:
+        without_bracket.append(str(i[0]))
+        without_bracket = list(dict.fromkeys(without_bracket))
+        without_bracket.sort()
+        cmb_{new}.config(values=without_bracket)
+        cmb_{new}_list = without_bracket
+        cmb_{new}.set_completion_list(cmb_{new}_list){DATA 2}
+    self.con.commit()
+except Exception as e:
+    messagebox.showerror('Error', e, parent = self.root)

@@ -1,0 +1,43 @@
+Date,dat_,date,1,100,1
+Region,reg_,combo,2,150,1
+Institute Name,ins_,combo,3,300,1
+Department,dep_,combo,4,100,1
+System Desc,sys_,combo,5,100,1
+Warranty,war_,dText,6,100,1
+Warranty Expire,wrp_,dText,7,100,0
+Fault Reporter,frp_,text,8,100,0
+Fault Reported,frd_,text,9,100,0
+Part No,ptn_,text,10,100,0
+Serial No,srn_,text,11,100,0
+Engineer Name 1,en1_,combo,12,100,0
+Engineer Name 2,en2_,combo,13,100,0
+Complaint Status,jst_,combo,14,100,0
+From,pfr_,combo,15,100,0
+Send Request,snr_,text,16,100,0
+Request Date,rqd_,date,17,100,0
+Reply,rep_,combo,18,100,0
+Reply Date,rpd_,date,19,100,0
+Quotation Send,qsd_,date,20,100,0
+Purchase Order,pro_,date,21,100,0
+Part Order Date,pod_,date,22,100,0
+Part Received,prd_,date,23,100,0
+Part No 2,pt2_,text,24,100,0
+Serial No 2,sr2_,text,25,100,0
+Letter For Approval,lfa_,date,26,100,0
+Customer Approval,csa_,date,27,100,0
+Description,des_,text,28,200,0
+RMA No,rma_,text,29,100,0
+RMA Date,rmd_,date,30,100,0
+Sending Date,snd_,date,31,100,0
+Warranty Claim,wrc_,combo,32,100,0
+Warranty Claim,wcj_,date,33,100,0
+Sys Received,srd_,date,34,100,0
+Sys Part No,spn_,text,35,100,0
+Sys Serial No,ssn_,text,36,100,0
+Sending Date,sdt_,date,37,100,0
+Reference,ref_,text,38,100,0
+LM Receiving Date,lmr_,date,39,100,0
+Repairing Charges,rpc_,date,40,100,0
+Remarks,rem_,text,41,100,0
+Job Done Date,jdd_,date,42,100,0
+Attachment,att,attach,43,100,0

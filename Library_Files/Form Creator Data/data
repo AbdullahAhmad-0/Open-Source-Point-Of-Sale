@@ -1,0 +1,46 @@
+\n\n        y_ += y_space\n        lbl_{shn} = Label(self.detailFrame, text='{Name}', font=self.formset_mainF, bg=self.colorList[7], fg=self.colorList[8], highlightbackground=self.colorList[11], highlightthickness=2, highlightcolor=self.colorList[12])\n        lbl_{shn}.place(x=10, y=y_)\n        ent_{shn} = Entry(self.detailFrame, textvariable=self.var_{shn}, border=0, font=self.formset_mainF, bg=self.colorList[9], fg=self.colorList[10], highlightbackground=self.colorList[11], highlightthickness=2, highlightcolor=self.colorList[12])\n        ent_{shn}.place(x=self.dF_ent_x, y=y_, width=self.dF_ent_w)
+\n\n        y_ += y_space\n        lbl_{shn} = Label(self.detailFrame, text='{Name}', font=self.formset_mainF, bg=self.colorList[7], fg=self.colorList[8], highlightbackground=self.colorList[11], highlightthickness=2, highlightcolor=self.colorList[12])\n        lbl_{shn}.place(x=10, y=y_)\n        ent_{shn} = DateEntry(self.detailFrame, textvariable=self.var_{shn}, border=0, font=self.formset_mainF, bg=self.colorList[9], fg=self.colorList[10], highlightbackground=self.colorList[11], highlightthickness=2, highlightcolor=self.colorList[12], justify=CENTER, date_pattern='dd-mm-y')\n        ent_{shn}.place(x=self.dF_ent_x, y=y_, width=self.dF_ent_w - 10)\n        def cls_{shn}():\n            self.var_{shn}.set("")\n            ent_{shn}.update()\n        btn_{shn} = Button(self.detailFrame, command=cls_{shn}, justify=LEFT, text='-', font=(self.formset_mainF, 13), bd=0, cursor='hand2', bg=self.colorList[5], activeforeground=self.colorList[22], activebackground=self.colorList[21], fg=self.colorList[6])\n        btn_{shn}.place(x=self.dF_ent_x + self.dF_ent_w - 10, y=y_, width=10, height=25)
+\n\n        y_ += y_space\n        lbl_{shn} = Label(self.detailFrame, text='{Name}', font=self.formset_mainF, bg=self.colorList[7], fg=self.colorList[8], highlightbackground=self.colorList[11], highlightthickness=2, highlightcolor=self.colorList[12])\n        lbl_{shn}.place(x=10, y=y_)\n        cmb_{shn}_list = ['']\n        cmb_{shn} = AutocompleteCombobox(self.detailFrame, values=cmb_{shn}_list, textvariable=self.var_{shn}, font=self.formset_mainF, background=self.colorList[9], foreground=self.colorList[10])\n        cmb_{shn}.set_completion_list(cmb_{shn}_list)\n        cmb_{shn}.tk.eval(f'[ttk::combobox::PopdownWindow %s].f.l configure -background {self.colorList[13]}' % cmb_{shn})\n        cmb_{shn}.place(x=self.dF_ent_x, y=y_, width=self.dF_ent_w)\n        cmb_{shn}.current(0)
+\n\n        y_ += y_space\n        lbl_{shn} = Label(self.detailFrame, text='{Name}', font=self.formset_mainF, bg=self.colorList[7], fg=self.colorList[8], highlightbackground=self.colorList[11], highlightthickness=2, highlightcolor=self.colorList[12])\n        lbl_{shn}.place(x=10, y=y_)\n        ent_{shn} = Entry(self.detailFrame, textvariable=self.var_{shn}, border=0, font=self.formset_mainF, bg=self.colorList[9], fg=self.colorList[10], highlightbackground=self.colorList[11], highlightthickness=2, highlightcolor=self.colorList[12])\n        ent_{shn}.place(x=self.dF_ent_x, y=y_, width=self.dF_ent_w)\n        def check_int_{shn}(event):\n            try:\n                int(self.var_{shn}.get())\n            except:\n                len1 = len(self.var_{shn}.get())\n                len1 = len1 - 1\n                self.var_{shn}.set(self.var_{shn}.get()[0:len1])\n                try:\n                    int(self.var_{shn}.get())\n                except:\n                    pass\n        ent_{shn}.bind("<KeyRelease>", check_int_{shn})
+\n\n        y_ += y_space\n        lbl_{shn} = Label(self.detailFrame, text='{Name}', font=self.formset_mainF, bg=self.colorList[7], fg=self.colorList[8], highlightbackground=self.colorList[11], highlightthickness=2, highlightcolor=self.colorList[12])\n        lbl_{shn}.place(x=10, y=y_)\n        btn_att = Entry(self.detailFrame, textvariable=self.var_{shn}3, border=0, font=self.formset_mainF, bg=self.colorList[9], fg=self.colorList[10], highlightbackground=self.colorList[11], highlightthickness=2, highlightcolor=self.colorList[12])\n        btn_att.place(x=self.dF_ent_x, y=y_, width=self.dF_ent_w-120)\n        self.var_{shn}3.set('Not Attached')\n        def attach():\n            ff = filedialog.askopenfilename(parent=self.root, title='Select Document')\n            self.var_{shn}1.set(ff)\n            abcd = self.convertToBinaryData(ff)\n            self.var_{shn}2.set(abcd.decode('cp437'))\n            self.var_{shn}3.set('Attached')\n        btn_att = Button(self.detailFrame, text='Attach', command=attach, justify=LEFT, font=(self.formset_mainF, 13), bd=1, cursor='hand2', bg=self.colorList[5], activeforeground=self.colorList[22], activebackground=self.colorList[21], fg=self.colorList[6])\n        btn_att.place(x=self.dF_ent_x+self.dF_ent_w-120, y=y_, width=60, height=25)\n        def open_doc():\n            x = random.randint(1, 500000)\n            x = str(x)\n            z = self.var_{shn}1.get()\n            z = os.path.basename(z)\n            loc = 'Temp\\Temp' + x + z\n            a = self.var_{shn}2.get()\n            a = a.encode('cp437')\n            with open(loc, 'wb') as file:\n                file.write(a)\n            os.startfile(loc)\n        btn_open = Button(self.detailFrame, text='Open', command=open_doc, justify=LEFT, font=(self.formset_mainF, 13), bd=1, cursor='hand2', bg=self.colorList[5], activeforeground=self.colorList[22], activebackground=self.colorList[21], fg=self.colorList[6])\n        btn_open.place(x=self.dF_ent_x+self.dF_ent_w-60, y=y_, width=59, height=25)
+\n\n        y_ += y_space\n        lbl_{shn} = Label(self.detailFrame, text='{Name}', font=self.formset_mainF, bg=self.colorList[7], fg=self.colorList[8], highlightbackground=self.colorList[11], highlightthickness=2, highlightcolor=self.colorList[12])\n        lbl_{shn}.place(x=10, y=y_)\n        ent_{shn} = Entry(self.detailFrame, textvariable=self.var_{shn}, disabledbackground=self.colorList[14], disabledforeground=self.colorList[15], state=DISABLED, border=0, font=self.formset_mainF)\n        ent_{shn}.place(x=self.dF_ent_x, y=y_, width=self.dF_ent_w)
+\n        self.var_{shn} = StringVar()  # {Name}
+\n        self.var_{shn}1 = StringVar()  # {Name}\n        self.var_{shn}2 = StringVar()  # {Name}\n        self.var_{shn}3 = StringVar()  # {Name}
+
+, self.var_{shn}.get()
+, self.var_{shn}1.get(), self.var_{shn}2.get()
+, 'N'
+, self.var_{shn}.get()
+, self.var_{shn}1.get(), self.var_{shn}2.get()
+
+\n        self.var_{shn}.set('')
+\n        self.var_{shn}1.set('')\n        self.var_{shn}2.set('')\n        self.var_{shn}3.set('Not Attached')
+
+\n        {shn} = []
+\n            {shn}.append(pp[{NO Count}])
+,'{Name}'
+,{shn}
+
+,'" + i[{NO Count}] + "'
+,'" + '' + "','" + '' + "'
+,{Name}
+,'" + '' + "'
+\n                if self.var_search_by.get() == '{Name}':\n                    search_by = '{shn}'
+,'{Name}'
+
+\n            self.var_{shn}.set(row[{NO Count}])
+\n            self.var_{shn}1.set(row[{NO Count}])\n            self.var_{shn}2.set(row[{NO Count}+1])\n            if self.var_{shn}1.get()=='':\n                self.var_{shn}3.set('Not Attached')\n            elif self.var_{shn}1.get()!='':\n                self.var_{shn}3.set('Attached')
+
+\n                            "{shn}"	TEXT,
+\n                            "{shn}1"  TEXT,\n                            "{shn}2"	BLOB,
+\n                              , {shn} TEXT NOT NULL
+\n                              , {shn}1 TEXT NOT NULL , {shn}2 LONGBLOB NOT NULL
+
+,'{shn}'
+\n        self.Table.heading('{shn}', text='{Name}')
+\n        self.Table.column('{shn}', width={width})
+,?
+,{shn}=?
+,{shn}1=?,{shn}2=?
+\n            elif self.var_{shn}.get() == '':\n                self.lbl_status.config(text=f'[Add Error] {Name} IS REQUIRED')\n                Log_Generator().addLog(f'[Add Error] {Name} IS REQUIRED')\n                if self.cmnset_msgboxAadd == 'True':\n                    messagebox.showerror('Error', '{Name} IS REQUIRED', parent=self.root)
+\n            elif self.var_{shn}.get() == '':\n                self.lbl_status.config(text=f'[Update Error] {Name} IS REQUIRED')\n                Log_Generator().addLog(f'[Update Error] {Name} IS REQUIRED')\n                if self.cmnset_msgboxAupd == 'True':\n                    messagebox.showerror('Error', f'{Name} IS REQUIRED', parent=self.root)
