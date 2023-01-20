@@ -36,6 +36,8 @@ class Main(BeforeInIt, AllSettings):
         self.root.iconbitmap(self.iconPath)
         self.root.config(bg=self.colorList[3])
 
+        if self.cmnset_fullscreen == 'True':
+            self.root.attributes("-fullscreen", True)
         self.root.state('zoomed')  # zoomed
         self.root.bind("<F11>", lambda event: self.root.attributes("-fullscreen", not self.root.attributes("-fullscreen")))
         self.root.bind("<Escape>", lambda event: self.root.attributes("-fullscreen", False))
@@ -49,12 +51,11 @@ class Main(BeforeInIt, AllSettings):
         style.map('Treeview', background=[('selected', self.colorList[19])], foreground=[('selected', self.colorList[20])])
 
         self.root.update()
-
         self.mainW = self.root.winfo_width()
         self.mainH = self.root.winfo_height()
 
         # Call Functions
-        self.CallCommonVar(21)
+        self.CallCommonVar(1)
 
         f = open(f'{self.library_folder}\\Top Func', 'r')
         top_func = f.readlines()
@@ -111,20 +112,23 @@ class Main(BeforeInIt, AllSettings):
 
         def rT(s):
             if s == 1:
-                self.cmnset_refT = 1
+                self.cmnset_refT = 'True'
             elif s == 0:
-                self.cmnset_refT = 0
+                self.cmnset_refT = 'False'
 
         fileMenu.add_command(label="Enable Refresh Thread", command=lambda: rT(1))
         fileMenu.add_command(label="Disable Refresh Thread", command=lambda: rT(0))
         fileMenu.add_separator()
         fileMenu.add_command(label="Exit", underline=0, command=self.root.destroy)
+        self.menubar.add_command(label="x", underline=0, command=self.root.destroy)
+        def minmax():
+            self.root.attributes("-fullscreen", not self.root.attributes("-fullscreen"))
+            self.root.attributes("-topmost", False)
+        self.menubar.add_command(label="⬜", underline=0, command=lambda: minmax())
         self.menubar.add_cascade(label="File", underline=0, menu=fileMenu)
 
         self.Menu()
-
         self.menubar.add_cascade(label="Refresh", underline=0, command=lambda: self.Refresh(thread_=0))
-
         self.RefreshT('1')
 
     def Menu(self):
@@ -346,7 +350,7 @@ class Main(BeforeInIt, AllSettings):
             x = threading.Thread(target=self.Refresh, args=(1,))
             x.start()
         elif thread_ == '0':
-            Log_Generator().addLog(f'[Refresh] Thread Stopped')
+            Log_Generator().addLog(f'[{self.mainName}] [Refresh] Thread Stopped')
 
     def Refresh(self, thread_):
         self.root.update()
@@ -358,11 +362,8 @@ class Main(BeforeInIt, AllSettings):
             self.old_mainH = self.mainH
 
             if thread_ == 0:
-                Log_Generator().addLog(f'[After Refresh]\t[Root Width] {self.mainW}, [Root Height] {self.mainH}')
-                self.CallCommonVar(1)
-
-            if thread_ == 1:
-                self.CallCommonVar(1)
+                Log_Generator().addLog(f'[{self.mainName}] [After Refresh]\t[Root Width] {self.mainW}, [Root Height] {self.mainH}')
+            self.CallCommonVar(1)
 
             self.buttonFrameDemo.place_forget()
             self.buttonFrameDemo.place_configure(x=self.dFbFstF_x, y=self.dFsF_y, width=self.dFbF_w, height=self.dF_h)

@@ -18,6 +18,9 @@ class LogViewer(BeforeInIt, AllSettings):
         self.root.iconbitmap(self.iconPath)
         self.root.config(bg=self.colorList[2])
 
+        if self.cmnset_fullscreen == 'True':
+            self.root.attributes("-fullscreen", True)
+
         self.root.state('zoomed')  # zoomed
         self.root.bind("<F11>", lambda event: self.root.attributes("-fullscreen", not self.root.attributes("-fullscreen")))
         self.root.bind("<Escape>", lambda event: self.root.attributes("-fullscreen", False))
@@ -59,6 +62,9 @@ class LogViewer(BeforeInIt, AllSettings):
         self.txt_import.pack(fill=BOTH, expand=1)
 
         self.selectFile('e')
+
+        btn_ = Button(self.root, command=self.root.destroy, justify=LEFT, text='x', font=('calibri', 13), bd=0, cursor='hand2', bg=self.colorList[5], activeforeground=self.colorList[22], activebackground=self.colorList[21], fg=self.colorList[6])
+        btn_.place(x=0, y=0, width=30, height=25)
     
     def selectFile(self, e):
         self.txt_import.delete('1.0', END)

@@ -23,6 +23,9 @@ class CallSetting:
     def getFormSetting(self):
         return self.__CommonSetting__("Form Setting")
 
+    def getReportSetting(self):
+        return self.__CommonSetting__("Report Setting")
+
     def __checkFL__(self, setting):
         nList = []
         for i in setting:

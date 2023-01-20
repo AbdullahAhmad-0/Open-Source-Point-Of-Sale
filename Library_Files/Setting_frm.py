@@ -1,5 +1,5 @@
 from tkinter import *
-from tkinter import ttk, messagebox, filedialog
+from tkinter import ttk, messagebox, filedialog, font, colorchooser
 from tkcalendar import Calendar, DateEntry
 import os, threading, shutil
 
@@ -23,16 +23,13 @@ class Setting(BeforeInIt, AllSettings):
     mainName = "Setting"
 
     def __init__(self, wind) -> None:
-        if Log_Generator().findLog():
-            Log_Generator().startLog()
-        else:
-            Log_Generator().createLog()
-
         self.root = wind
         self.root.title(self.title)
         self.root.iconbitmap(self.iconPath)
         self.root.config(bg=self.colorList[3])
 
+        if self.cmnset_fullscreen == 'True':
+            self.root.attributes("-fullscreen", True)
         self.root.state('zoomed')  # zoomed
         self.root.bind("<F11>", lambda event: self.root.attributes("-fullscreen", not self.root.attributes("-fullscreen")))
         self.root.bind("<Escape>", lambda event: self.root.attributes("-fullscreen", False))
@@ -126,7 +123,26 @@ class Setting(BeforeInIt, AllSettings):
         fileMenu.add_command(label="Restore Settings", command=self.Restore)
         fileMenu.add_separator()
         fileMenu.add_command(label="Exit", underline=0, command=self.root.destroy)
+        menubar.add_command(label="x", underline=0, command=self.root.destroy)
+        def minmax():
+            self.root.attributes("-fullscreen", not self.root.attributes("-fullscreen"))
+            self.root.attributes("-topmost", False)
+        menubar.add_command(label="⬜", underline=0, command=lambda: minmax())
         menubar.add_cascade(label="File", underline=0, menu=fileMenu)
+
+        moreMenu = Menu(menubar)
+        moreMenu = Menu(moreMenu, background=self.colorList[2])
+        moreMenu.add_separator()
+        moreMenu.add_command(label="Refresh Common Variable", command=lambda: self.CallCommonVar(1))
+        moreMenu.add_separator()
+        def rT(s):
+            if s == 1:
+                self.cmnset_refT = 'True'
+            elif s == 0:
+                self.cmnset_refT = 'False'
+        moreMenu.add_command(label="Enable Refresh Thread", command=lambda: rT(1))
+        moreMenu.add_command(label="Disable Refresh Thread", command=lambda: rT(0))
+        menubar.add_cascade(label="More", underline=0, menu=moreMenu)
 
         menubar.add_cascade(label="Refresh", underline=0, command=lambda: self.Refresh_(thread_=0))
         self.RefreshT('1')
@@ -160,12 +176,20 @@ class Setting(BeforeInIt, AllSettings):
                             cmb_d = self.SetVar[count].get()
                             self.DATAFORSAVE.append(cmb_d)
 
+                        elif field_.startswith("font"):
+                            font_d = self.SetVar[count].get()
+                            self.DATAFORSAVE.append(font_d)
+
                         elif field_.startswith("text"):
                             if name_.startswith('File+'):
                                 name, line = str(name_).split('+')
                                 ent_d = f'File+{line}+{self.SetVar[count].get()}'
                             else:
                                 ent_d = self.SetVar[count].get()
+                            self.DATAFORSAVE.append(ent_d)
+
+                        elif field_.startswith("color"):
+                            ent_d = self.SetVar[count].get()
                             self.DATAFORSAVE.append(ent_d)
 
                         elif field_.startswith("aofoT"):
@@ -276,12 +300,20 @@ class Setting(BeforeInIt, AllSettings):
                     cmb_d = self.SetVar[count].get()
                     self.DATAFORSAVE.append(cmb_d)
 
+                elif field_.startswith("font"):
+                    font_d = self.SetVar[count].get()
+                    self.DATAFORSAVE.append(font_d)
+
                 elif field_.startswith("text"):
                     if name_.startswith('File+'):
                         name, line = str(name_).split('+')
                         ent_d = f'File+{line}+{self.SetVar[count].get()}'
                     else:
                         ent_d = self.SetVar[count].get()
+                    self.DATAFORSAVE.append(ent_d)
+
+                elif field_.startswith("color"):
+                    ent_d = self.SetVar[count].get()
                     self.DATAFORSAVE.append(ent_d)
 
                 elif field_.startswith("aofoT"):
@@ -338,6 +370,8 @@ class Setting(BeforeInIt, AllSettings):
                     fd = f.readlines()
                     f.close()
                     new_fd = []
+                    data = data.rstrip('\n')
+                    data += '\n'
                     for i in range(len(fd)):
                         if int(i) == int(line) - 1:
                             new_fd.append(f'{data}')
@@ -352,6 +386,8 @@ class Setting(BeforeInIt, AllSettings):
 
             f = open(f'{self.setting_folder}\\{selectedSet}', 'w')
             f.writelines(self.DATA)
+
+        self.lbl_status.config(text='Setting Saved: Successfully')
 
     def Refresh(self):
         self.Refresh_(0)
@@ -389,8 +425,19 @@ class Setting(BeforeInIt, AllSettings):
                             self.SetVar[count].set(name__)
                             self.SetFields[count].set(name__)
 
+                        elif field_.startswith("font"):
+                            self.SetVar[count].set(name__)
+                            self.SetFields[count].set(name__)
+
                         elif field_.startswith("text"):
                             self.SetVar[count].set(name__)
+
+                        elif field_.startswith("color"):
+                            self.SetVar[count].set(name__)
+                            try:
+                                self.SetFields[count][1].config(fg=name__)
+                            except:
+                                pass
 
                         elif field_.startswith("aofoT"):
                             self.SetVar[count].set(name__)
@@ -439,9 +486,21 @@ class Setting(BeforeInIt, AllSettings):
 
                 if field_.startswith("combo"):
                     self.SetVar[count].set(name_)
+                    self.SetFields[count].set(name_)
+
+                elif field_.startswith("font"):
+                    self.SetVar[count].set(name_)
+                    self.SetFields[count].set(name_)
 
                 elif field_.startswith("text"):
                     self.SetVar[count].set(name_)
+
+                elif field_.startswith("color"):
+                    self.SetVar[count].set(name_)
+                    try:
+                        self.SetFields[count][1].config(fg=name_)
+                    except:
+                        pass
 
                 elif field_.startswith("aofoT"):
                     self.SetVar[count].set(name_)
@@ -499,7 +558,13 @@ class Setting(BeforeInIt, AllSettings):
                         if field_.startswith("combo"):
                             self.SetVar[count].set(name_)
 
+                        elif field_.startswith("font"):
+                            self.SetVar[count].set(name_)
+
                         elif field_.startswith("text"):
+                            self.SetVar[count].set(name_)
+
+                        elif field_.startswith("color"):
                             self.SetVar[count].set(name_)
 
                         elif field_.startswith("aofoT"):
@@ -534,7 +599,13 @@ class Setting(BeforeInIt, AllSettings):
                 if field_.startswith("combo"):
                     self.SetVar[count].set(name_)
 
+                elif field_.startswith("font"):
+                    self.SetVar[count].set(name_)
+
                 elif field_.startswith("text"):
+                    self.SetVar[count].set(name_)
+
+                elif field_.startswith("color"):
                     self.SetVar[count].set(name_)
 
                 elif field_.startswith("aofoT"):
@@ -752,6 +823,26 @@ class Setting(BeforeInIt, AllSettings):
                         self.SetFields.append(cmb_)
                         self.SetVar.append(var_)
 
+                    elif field_.startswith("font"):
+                        frm_ = Frame(self.selectSetFrameO2, bg=self.colorList[2], width=self.dFbF_w - 10, height=y_space)
+                        frm_.pack(fill=BOTH, expand=True)
+
+                        self.SetField_.append("font")
+                        field_ = list(font.families())
+
+                        var_ = StringVar()
+                        y_ = 1
+                        lbl_ = Label(frm_, text=f'{id_}', font=self.formset_mainF, bg=self.colorList[7], fg=self.colorList[8], highlightbackground=self.colorList[11], highlightthickness=2, highlightcolor=self.colorList[12])
+                        lbl_.place(x=10, y=y_)
+                        cmb_list = field_
+                        cmb_ = AutocompleteCombobox(frm_, values=cmb_list, textvariable=var_, font=self.formset_mainF, background=self.colorList[9], foreground=self.colorList[10])
+                        cmb_.set_completion_list(cmb_list)
+                        cmb_.tk.eval(f'[ttk::combobox::PopdownWindow %s].f.l configure -background {self.colorList[13]}' % cmb_)
+                        cmb_.place(x=self.dF_ent_x, y=y_, width=self.dF_ent_w)
+                        cmb_.current(0)
+                        self.SetFields.append(cmb_)
+                        self.SetVar.append(var_)
+
                     elif field_.startswith("text"):
                         frm_ = Frame(self.selectSetFrameO2, bg=self.colorList[2], width=self.dFbF_w - 10, height=y_space)
                         frm_.pack(fill=BOTH, expand=True)
@@ -764,6 +855,31 @@ class Setting(BeforeInIt, AllSettings):
                         ent_ = Entry(frm_, border=0, textvariable=var_, font=self.formset_mainF, bg=self.colorList[9], fg=self.colorList[10], highlightbackground=self.colorList[11], highlightthickness=2, highlightcolor=self.colorList[12])
                         ent_.place(x=self.dF_ent_x, y=y_, width=self.dF_ent_w)
                         self.SetFields.append(ent_)
+                        self.SetVar.append(var_)
+
+                    elif field_.startswith("color"):
+                        frm_ = Frame(self.selectSetFrameO2, bg=self.colorList[2], width=self.dFbF_w - 10, height=y_space)
+                        frm_.pack(fill=BOTH, expand=True)
+
+                        self.SetField_.append("color")
+                        var_ = StringVar()
+                        y_ = 1
+                        lbl_ = Label(frm_, text=f'{id_}', font=self.formset_mainF, bg=self.colorList[7], fg=self.colorList[8], highlightbackground=self.colorList[11], highlightthickness=2, highlightcolor=self.colorList[12])
+                        lbl_.place(x=10, y=y_)
+                        ent_ = Entry(frm_, border=0, textvariable=var_, font=self.formset_mainF, bg=self.colorList[9], fg=self.colorList[10], highlightbackground=self.colorList[11], highlightthickness=2, highlightcolor=self.colorList[12])
+                        ent_.place(x=self.dF_ent_x, y=y_, width=self.dF_ent_w - 31)
+
+                        def color_(c):
+                            color_code = colorchooser.askcolor(parent=self.root, title="Choose color")
+                            if color_code[1] != "" and color_code[1] is not None:
+                                self.SetVar[c].set(color_code[1])
+                                self.SetFields[c][0].update()
+                                self.SetFields[c][1].config(fg=color_code[1])
+
+                        btn_ = Button(frm_, command=lambda count=count: color_(count), justify=LEFT, text='🎨', font=('calibri', 13), bd=0, cursor='hand2', bg=self.colorList[5], activeforeground=self.colorList[22], activebackground=self.colorList[21], fg=self.colorList[6])
+                        btn_.place(x=self.dF_ent_x + self.dF_ent_w - 30, y=y_, width=30, height=25)
+
+                        self.SetFields.append([ent_, btn_])
                         self.SetVar.append(var_)
 
                     elif field_.startswith("aofoT"):
@@ -989,6 +1105,26 @@ class Setting(BeforeInIt, AllSettings):
                     self.SetFields.append(cmb_)
                     self.SetVar.append(var_)
 
+                elif field_.startswith("font"):
+                    frm_ = Frame(self.selectSetFrameO, bg=self.colorList[2], width=self.dFbF_w - 10, height=y_space)
+                    frm_.pack(fill=BOTH, expand=True)
+
+                    field_ = list(font.families())
+
+                    var_ = StringVar()
+                    y_ = 1
+                    lbl_ = Label(frm_, text=f'{id_}', font=self.formset_mainF, bg=self.colorList[7], fg=self.colorList[8], highlightbackground=self.colorList[11], highlightthickness=2, highlightcolor=self.colorList[12])
+                    lbl_.place(x=10, y=y_)
+                    cmb_list = field_
+                    cmb_ = AutocompleteCombobox(frm_, values=cmb_list, textvariable=var_, font=self.formset_mainF, background=self.colorList[9], foreground=self.colorList[10])
+                    cmb_.set_completion_list(cmb_list)
+                    cmb_.tk.eval(f'[ttk::combobox::PopdownWindow %s].f.l configure -background {self.colorList[13]}' % cmb_)
+                    cmb_.place(x=self.dF_ent_x, y=y_, width=self.dF_ent_w)
+                    cmb_.current(0)
+
+                    self.SetFields.append(cmb_)
+                    self.SetVar.append(var_)
+
                 elif field_.startswith("text"):
                     frm_ = Frame(self.selectSetFrameO, bg=self.colorList[2], width=self.dFbF_w - 10, height=y_space)
                     frm_.pack(fill=BOTH, expand=True)
@@ -1000,6 +1136,30 @@ class Setting(BeforeInIt, AllSettings):
                     ent_ = Entry(frm_, border=0, textvariable=var_, font=self.formset_mainF, bg=self.colorList[9], fg=self.colorList[10], highlightbackground=self.colorList[11], highlightthickness=2, highlightcolor=self.colorList[12])
                     ent_.place(x=self.dF_ent_x, y=y_, width=self.dF_ent_w)
                     self.SetFields.append(ent_)
+                    self.SetVar.append(var_)
+
+                elif field_.startswith("color"):
+                    frm_ = Frame(self.selectSetFrameO, bg=self.colorList[2], width=self.dFbF_w - 10, height=y_space)
+                    frm_.pack(fill=BOTH, expand=True)
+
+                    var_ = StringVar()
+                    y_ = 1
+                    lbl_ = Label(frm_, text=f'{id_}', font=self.formset_mainF, bg=self.colorList[7], fg=self.colorList[8], highlightbackground=self.colorList[11], highlightthickness=2, highlightcolor=self.colorList[12])
+                    lbl_.place(x=10, y=y_)
+                    ent_ = Entry(frm_, border=0, textvariable=var_, font=self.formset_mainF, bg=self.colorList[9], fg=self.colorList[10], highlightbackground=self.colorList[11], highlightthickness=2, highlightcolor=self.colorList[12])
+                    ent_.place(x=self.dF_ent_x, y=y_, width=self.dF_ent_w - 31)
+
+                    def color_(c):
+                        color_code = colorchooser.askcolor(parent=self.root, title="Choose color")
+                        if color_code[1] != "" and color_code[1] is not None:
+                            self.SetVar[c].set(color_code[1])
+                            self.SetFields[c][0].update()
+                            self.SetFields[c][1].config(fg=color_code[1])
+
+                    btn_ = Button(frm_, command=lambda count=count: color_(count), justify=LEFT, text='🎨', font=('calibri', 13), bd=0, cursor='hand2', bg=self.colorList[5], activeforeground=self.colorList[22], activebackground=self.colorList[21], fg=self.colorList[6])
+                    btn_.place(x=self.dF_ent_x + self.dF_ent_w - 30, y=y_, width=30, height=25)
+
+                    self.SetFields.append([ent_, btn_])
                     self.SetVar.append(var_)
 
                 elif field_.startswith("aofoT"):
@@ -1169,7 +1329,7 @@ class Setting(BeforeInIt, AllSettings):
             x = threading.Thread(target=self.Refresh_, args=(1,))
             x.start()
         elif thread_ == '0':
-            Log_Generator().addLog(f'[Refresh] Thread Stopped')
+            Log_Generator().addLog(f'[{self.mainName}] [Refresh] Thread Stopped')
 
     def Refresh_(self, thread_):
         self.root.update()
@@ -1177,8 +1337,11 @@ class Setting(BeforeInIt, AllSettings):
         self.mainH = self.root.winfo_height()
 
         if self.old_mainW != self.mainW or self.old_mainH != self.mainH:
+            self.old_mainW = self.mainW
+            self.old_mainH = self.mainH
+
             if thread_ == 0:
-                Log_Generator().addLog(f'[After Refresh]\t[Root Width] {self.mainW}, [Root Height] {self.mainH}')
+                Log_Generator().addLog(f'[{self.mainName}] [After Refresh]\t[Root Width] {self.mainW}, [Root Height] {self.mainH}')
                 self.CallCommonVar(1)
 
             if thread_ == 1:
@@ -1223,6 +1386,10 @@ class Setting(BeforeInIt, AllSettings):
                 self.root.after(int(self.cmnset_refA), lambda: self.RefreshT('1'))
             elif self.cmnset_refT == 'False':
                 self.root.after(int(self.cmnset_refA), lambda: self.RefreshT('0'))
+        try:
+            self.lbl_status.config(text='')
+        except:
+            pass
 
 
 if __name__ == '__main__':
