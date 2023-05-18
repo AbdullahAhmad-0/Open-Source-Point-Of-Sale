@@ -2,8 +2,12 @@ import os
 from tkinter import *
 from tkinter import ttk
 
-from Library_Files.Autocomplete_Combo import AutocompleteCombobox
-from Library_Files.FormRun import *
+try:
+    from Autocomplete_Combo import AutocompleteCombobox
+    from FormRun import *
+except:
+    from Library_Files.Autocomplete_Combo import AutocompleteCombobox
+    from Library_Files.FormRun import *
 
 
 class LogViewer(BeforeInIt, AllSettings):
@@ -12,7 +16,10 @@ class LogViewer(BeforeInIt, AllSettings):
     mainName = "Log Viewer"
     title = mainName
 
-    def __init__(self, wind) -> None:
+    def __init__(self, wind, libFormList=[]) -> None:
+        BeforeInIt.__init__(self)
+        AllSettings.__init__(self)
+        super().__init__()
         self.root = wind
         self.root.title(self.title)
         self.root.iconbitmap(self.iconPath)

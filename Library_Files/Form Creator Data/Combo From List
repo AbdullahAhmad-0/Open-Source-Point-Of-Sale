@@ -1,17 +1,6 @@
-try:
-    self.cur.execute("select {new} from {tName}")
-    cmb_{new}.set("")
-    self.var_{new}.set("")
-    cmb_{new}.delete(cmb_{new}.get()){DATA 1}
-    fetch = self.cur.fetchall()
-    without_bracket=[]
-    for i in fetch:
-        without_bracket.append(str(i[0]))
-        without_bracket = list(dict.fromkeys(without_bracket))
-        without_bracket.sort()
-        cmb_{new}.config(values=without_bracket)
-        cmb_{new}_list = without_bracket
-        cmb_{new}.set_completion_list(cmb_{new}_list){DATA 2}
-    self.con.commit()
-except Exception as e:
-    messagebox.showerror('Error', e, parent = self.root)
+cmb_{new}.place(x=self.dF_ent_x, y=1, width=self.dF_ent_w - 21, height=self.formset_fieldH)
+btn_{new} = Button(frm_{new}, command=lambda: self.get_combo_list("select {fetch_from} from {tName_}", cmb_{new}, self.var_{new}), justify=LEFT, text='{btn_ref}', font=(self.formset_mainF, 13), bd=0, cursor='hand2', bg=self.colorList[5], activeforeground=self.colorList[22], activebackground=self.colorList[21], fg=self.colorList[6])
+btn_{new}.place(x=self.dF_ent_x + self.dF_ent_w - 21, y=1, width=10, height=self.formset_fieldH)
+btn_{new} = Button(frm_{new}, command=lambda: self.open_libForm('{tName}'), justify=LEFT, text='+', font=(self.formset_mainF, 13), bd=0, cursor='hand2', bg=self.colorList[5], activeforeground=self.colorList[22], activebackground=self.colorList[21], fg=self.colorList[6])
+btn_{new}.place(x=self.dF_ent_x + self.dF_ent_w - 10, y=1, width=10, height=self.formset_fieldH)
+self.get_combo_list("select {new} from {tName_}", cmb_{new}, self.var_{new})

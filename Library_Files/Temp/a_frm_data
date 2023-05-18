@@ -1,0 +1,11 @@
+Date,dat_,date,1,100,0
+text,r0_,text,2,150,1
+date,r1_,date,3,150,0
+combo,r2_,combo,4,150,0
+no,r3_,no,5,150,0
+attach,r4_,attach,6,150,0
+dText,r5_,dText,8,150,0
+listT,r6_,listT,9,150,0
+listC,r7_,listC,10,150,0
+listTD,r8_,listTD,11,150,0
+listCD,r9_,listCD,12,150,0

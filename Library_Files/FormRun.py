@@ -35,6 +35,9 @@ class BeforeInIt:
     old_mainW = 0
     old_mainH = 0
 
+    def __init__(self):
+        self.colorList = ColorScheme().getColor()
+
 
 def __getFromList__(setting):
     setting = setting.replace('[', '')
@@ -44,57 +47,66 @@ def __getFromList__(setting):
 
 
 class AllSettings:
-    # Advance Setting
-    advset_rtf = CallSetting().getAdvanceSetting()[1]
-    advset_dbb = CallSetting().getAdvanceSetting()[2]
-    advset_dbe = CallSetting().getAdvanceSetting()[3]
-    advset_dbl = CallSetting().getAdvanceSetting()[4]
+    def __init__(self):
+        self.refreshAllSettings()
 
-    # Common Setting
-    cmnset_msgboxAadd = CallSetting().getCommonSetting()[1]
-    cmnset_Afteradd = CallSetting().getCommonSetting()[2]
-    cmnset_msgboxAupd = CallSetting().getCommonSetting()[3]
-    cmnset_Afterupd = CallSetting().getCommonSetting()[4]
-    cmnset_msgboxAdel = CallSetting().getCommonSetting()[5]
-    cmnset_Afterdel = CallSetting().getCommonSetting()[6]
-    cmnset_msgboxAimp = CallSetting().getCommonSetting()[7]
-    cmnset_msgboxAexp = CallSetting().getCommonSetting()[8]
-    cmnset_refA = CallSetting().getCommonSetting()[9]
-    cmnset_refT = CallSetting().getCommonSetting()[10]
-    cmnset_fullscreen = CallSetting().getCommonSetting()[11]
+    def refreshAllSettings(self):
+        # Advance Setting
+        self.advset_rtf = CallSetting().getAdvanceSetting()[1]
+        self.advset_dbb = CallSetting().getAdvanceSetting()[2]
+        self.advset_dbe = CallSetting().getAdvanceSetting()[3]
+        self.advset_dbl = CallSetting().getAdvanceSetting()[4]
 
-    # Database Configuration
-    dbconfig_db = CallSetting().getDatabaseSetting()[1]
-    dbconfig_host = CallSetting().getDatabaseSetting()[2]
-    dbconfig_user = CallSetting().getDatabaseSetting()[3]
-    dbconfig_pass = CallSetting().getDatabaseSetting()[4]
+        # Common Setting
+        self.cmnset_msgboxAadd = CallSetting().getCommonSetting()[1]
+        self.cmnset_Afteradd = CallSetting().getCommonSetting()[2]
+        self.cmnset_msgboxAupd = CallSetting().getCommonSetting()[3]
+        self.cmnset_Afterupd = CallSetting().getCommonSetting()[4]
+        self.cmnset_msgboxAdel = CallSetting().getCommonSetting()[5]
+        self.cmnset_Afterdel = CallSetting().getCommonSetting()[6]
+        self.cmnset_msgboxAimp = CallSetting().getCommonSetting()[7]
+        self.cmnset_msgboxAexp = CallSetting().getCommonSetting()[8]
+        self.cmnset_refA = CallSetting().getCommonSetting()[9]
+        self.cmnset_refT = CallSetting().getCommonSetting()[10]
+        self.cmnset_fullscreen = CallSetting().getCommonSetting()[11]
+        self.cmnset_current_cs = CallSetting().getCommonSetting()[12]
+        # buttons [13]
 
-    # Form Setting
-    formset_searchFH = CallSetting().getFormSetting()[1]
-    formset_statusFH = CallSetting().getFormSetting()[2]
-    formset_btn_detFW = CallSetting().getFormSetting()[3]
-    formset_btnFH = CallSetting().getFormSetting()[4]
-    formset_mainFBFW = CallSetting().getFormSetting()[5]
-    formset_mainFSFH = CallSetting().getFormSetting()[6]
-    formset_yInF = CallSetting().getFormSetting()[7]
-    formset_wOfF = CallSetting().getFormSetting()[8]
-    formset_xOfF = CallSetting().getFormSetting()[9]
-    formset_idStart = CallSetting().getFormSetting()[10]
-    formset_mainFHB = CallSetting().getFormSetting()[11]
-    formset_mainHF = CallSetting().getFormSetting()[12]
-    formset_mainF = CallSetting().getFormSetting()[13]
+        # Database Configuration
+        self.dbconfig_db = CallSetting().getDatabaseSetting()[1]
+        self.dbconfig_host = CallSetting().getDatabaseSetting()[2]
+        self.dbconfig_user = CallSetting().getDatabaseSetting()[3]
+        self.dbconfig_pass = CallSetting().getDatabaseSetting()[4]
+        self.dbconfig_dbname = CallSetting().getDatabaseSetting()[5]
 
-    # Report Setting
-    repset_Sauto = CallSetting().getReportSetting()[1]
-    repset_Sloc = CallSetting().getReportSetting()[2]
-    repset_Lrep = __getFromList__(CallSetting().getReportSetting()[3])
-    repset_Prep = __getFromList__(CallSetting().getReportSetting()[4])
-    repset_Size = CallSetting().getReportSetting()[5]
-    repset_tm = CallSetting().getReportSetting()[6]
-    repset_bm = CallSetting().getReportSetting()[7]
-    repset_lm = CallSetting().getReportSetting()[8]
-    repset_rm = CallSetting().getReportSetting()[9]
-    repset_oras = CallSetting().getReportSetting()[10]
+        # Form Setting
+        self.formset_searchFH = CallSetting().getFormSetting()[1]
+        self.formset_statusFH = CallSetting().getFormSetting()[2]
+        self.formset_btn_detFW = CallSetting().getFormSetting()[3]
+        self.formset_btnFH = CallSetting().getFormSetting()[4]
+        self.formset_mainFBFW = CallSetting().getFormSetting()[5]
+        self.formset_mainFSFH = CallSetting().getFormSetting()[6]
+        self.formset_yInF = CallSetting().getFormSetting()[7]
+        self.formset_wOfF = CallSetting().getFormSetting()[8]
+        self.formset_xOfF = CallSetting().getFormSetting()[9]
+        self.formset_idStart = CallSetting().getFormSetting()[10]
+        self.formset_mainFHB = CallSetting().getFormSetting()[11]
+        self.formset_mainHF = CallSetting().getFormSetting()[12]
+        self.formset_mainF = (CallSetting().getFormSetting()[13], CallSetting().getFormSetting()[14])
+        self.formset_fieldH = CallSetting().getFormSetting()[15]
+        self.formset_resetStatus = CallSetting().getFormSetting()[16]
+
+        # Report Setting
+        self.repset_Sauto = CallSetting().getReportSetting()[1]
+        self.repset_Sloc = CallSetting().getReportSetting()[2]
+        self.repset_Lrep = __getFromList__(CallSetting().getReportSetting()[3])
+        self.repset_Prep = __getFromList__(CallSetting().getReportSetting()[4])
+        self.repset_Size = CallSetting().getReportSetting()[5]
+        self.repset_tm = CallSetting().getReportSetting()[6]
+        self.repset_bm = CallSetting().getReportSetting()[7]
+        self.repset_lm = CallSetting().getReportSetting()[8]
+        self.repset_rm = CallSetting().getReportSetting()[9]
+        self.repset_oras = CallSetting().getReportSetting()[10]
 
     def CallCommonVar(self, height_):
         # common variables

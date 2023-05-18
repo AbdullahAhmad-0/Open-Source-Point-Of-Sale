@@ -1,7 +1,7 @@
 from tkinter import *
 from tkinter import ttk, messagebox, filedialog
 from tkcalendar import Calendar, DateEntry
-import os, random, time, pandas, csv, threading
+import re, os, random, time, pandas, csv, threading
 import pymysql, sqlite3
 from reportlab.lib import colors as abcdef
 from reportlab.lib import pagesizes  # For creating reports
@@ -9,6 +9,8 @@ from reportlab.lib.units import mm, inch
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Table, TableStyle  # For creating reports
 from reportlab.lib.styles import getSampleStyleSheet  # For creating reports
 from datetime import datetime, timedelta
+import textwrap
+import webbrowser  # For Opening Links
 # import openpyxl # for creating the excel report xlsx format
 
 try:
@@ -56,7 +58,6 @@ class CommonFunction:
 
         # Call Functions
         self.CallCommonVar(1)
-        self.RefreshId()
 
         f = open(f'{self.library_folder}\\Top Func', 'r')
         top_func = f.readlines()
@@ -162,7 +163,7 @@ class CommonFunction:
         self.statusFrame = Frame(self.root, bg=self.colorList[2])
         self.statusFrame.place(x=self.dFbFstF_x, y=self.stF_y, width=self.stF_w, height=self.stF_h)
 
-        self.lbl_status = Label(self.statusFrame, text='Status:', anchor=W, justify=LEFT, font=self.formset_mainF, bg=self.colorList[7], fg=self.colorList[8], highlightbackground=self.colorList[11], highlightthickness=2, highlightcolor=self.colorList[12])
+        self.lbl_status = Label(self.statusFrame, text='Status:', anchor=W, justify=LEFT, font=(self.formset_mainF[0], 13), bg=self.colorList[7], fg=self.colorList[8], highlightbackground=self.colorList[11], highlightthickness=2, highlightcolor=self.colorList[12])
         self.lbl_status.place(x=0, y=0, width=self.stF_w, height=self.stF_h)
 
         # After UI Creating
@@ -220,6 +221,7 @@ class CommonFunction:
         self.Clear()
         self.CallReportSet()
         self.RefreshT('1')
+        self.ResetlblStaT('1')
         self.Refresh(0, True)
 
     def Add(self):
@@ -230,7 +232,7 @@ class CommonFunction:
             # bq: Query Before Update Not Required
             # aq: Query After Update Not Required
         Returns:
-            Succeed or Not: Boolean
+            bool: Whether the record was added successfully or not
         """
 
         list_cvar = self.__list__('cvar')
@@ -408,6 +410,10 @@ class CommonFunction:
         list_var = self.__list__('var')
         self.Refresh(0)
         self.Show()
+        try:
+            list_var += self.__list__('extra_clear')
+        except:
+            pass
         for i in list_var:
             i.set('')
 
@@ -684,15 +690,47 @@ class CommonFunction:
 
         flow_obj = [header]
         count, headings, expList = self.Export_def()
-
-        t = Table([headings] + expList, hAlign='LEFT')
+        wrapped_expList = []
+        for row in expList:
+            wrapped_row = []
+            for i, cell in enumerate(row):
+                if self.split_pdf_rep:
+                    try:
+                        e = True
+                        for j, split in self.split_pdf_rep.items():
+                            if i == j:
+                                try:
+                                    wrapped_cell = "\n".join(textwrap.wrap(str(cell), width=int(split)))
+                                except:
+                                    wrapped_cell = "\n".join(str(cell).split(split))
+                                e = False
+                                break
+                            else: e = True
+                        if e:
+                            raise Exception()
+                    except Exception as e:
+                        if self.split_pdf_rep_auto:
+                            wrapped_cell = "\n".join(textwrap.wrap(str(cell), width=self.split_pdf_rep_auto_len))  # Wrap text to 20 characters
+                        else:
+                            wrapped_cell = cell
+                else:
+                    if self.split_pdf_rep_auto:
+                        wrapped_cell = "\n".join(textwrap.wrap(str(cell), width=self.split_pdf_rep_auto_len))  # Wrap text to 20 characters
+                    else:
+                        wrapped_cell = cell
+                wrapped_row.append(wrapped_cell)
+            wrapped_expList.append(wrapped_row)
+        t = Table([headings] + wrapped_expList, hAlign='LEFT', repeatRows=1)
         tstyle = TableStyle([
             ('GRID', (0, 0), (-1, -1), 1, abcdef.springgreen),
             ('LINEBELOW', (0, 0), (-1, 0), 2, abcdef.springgreen),
             ('BACKGROUND', (0, 0), (-1, 0), abcdef.springgreen),
             ('FONTSIZE', (0, 0), (-1, 0), 8),
-            ('FONTSIZE', (0, 0), (-1, -1), 7)
+            ('FONTSIZE', (0, 0), (-1, -1), 7),
+            ('VALIGN',(0,0),(-1,-1),'TOP'),
+            ('WORDWRAP', (0, 0), (-1, -1), 1),
         ])
+
         t.setStyle(tstyle)
         flow_obj.append(t)
         footer = Paragraph("Total Records: " + str(count), styles['Heading2'])
@@ -766,7 +804,7 @@ class CommonFunction:
         txt_Frame = Frame(self.tp_import, bg=self.colorList[3])
         txt_Frame.place(x=10, y=90, width=1000, height=175)
 
-        list_head = self.__list__('head')
+        list_head = self.__list__('headA')
         txt_head = self.__listTotxt__(list_head)
         scroll_y2 = Scrollbar(txt_Frame, orient=VERTICAL)
         txt_import = Text(txt_Frame, font=(self.formset_mainF, 15), bg=self.colorList[9], fg=self.colorList[10], highlightbackground=self.colorList[11], highlightthickness=2, highlightcolor=self.colorList[12], yscrollcommand=scroll_y2.set)
@@ -790,19 +828,19 @@ class CommonFunction:
 
     def open_layout(self, list_head):
         path = f"{self.temp_folder}\\ImportTemp.csv"
-        try:
-            f = open(path, 'r')
-            d = f.read()
-            f.close()
-
-            if len(d) < 1:
-                f = open(path, 'w')
-                f.write(list_head)
-                f.close()
-        except:
-            f = open(path, 'w')
-            f.write(list_head)
-            f.close()
+        # try:
+        #     f = open(path, 'r')
+        #     d = f.read()
+        #     f.close()
+        #
+        #     if len(d) < 1:
+        #         f = open(path, 'w')
+        #         f.write(list_head)
+        #         f.close()
+        # except:
+        f = open(path, 'w')
+        f.write(list_head)
+        f.close()
         os.startfile(path)
 
     def import_layout(self, txt_head, tp=None):
@@ -885,52 +923,119 @@ class CommonFunction:
             Log_Generator().addLog(f'[{self.mainName}] [Refresh] Thread Stopped')
 
     def Refresh(self, thread_, force=False):
-        self.root.update()
-        self.mainW = self.root.winfo_width()
-        self.mainH = self.root.winfo_height()
-        if force:
-            self.old_mainW = 0
-            self.old_mainH = 0
+        try:
+            self.root.update()
+            self.mainW = self.root.winfo_width()
+            self.mainH = self.root.winfo_height()
+            if force:
+                self.old_mainW = 0
+                self.old_mainH = 0
 
-        if self.old_mainW != self.mainW or self.old_mainH != self.mainH:
-            self.old_mainW = self.mainW
-            self.old_mainH = self.mainH
+            if self.old_mainW != self.mainW or self.old_mainH != self.mainH:
+                self.old_mainW = self.mainW
+                self.old_mainH = self.mainH
 
-            if thread_ == 0:
-                self.RefreshId()
-                Log_Generator().addLog(f'[{self.mainName}] [After Refresh]\t[Root Width] {self.mainW}, [Root Height] {self.mainH}')
+                if thread_ == 0:
+                    self.RefreshId()
+                    Log_Generator().addLog(f'[{self.mainName}] [After Refresh]\t[Root Width] {self.mainW}, [Root Height] {self.mainH}')
 
-            self.CallCommonVar(1)
+                self.CallCommonVar(1)
 
-            self.detailFrameDemo.place_forget()
-            self.detailFrameDemo.place_configure(x=self.dFbFstF_x, y=self.dFsF_y, width=self.dFbF_w, height=self.dF_h)
+                self.detailFrameDemo.place_forget()
+                self.detailFrameDemo.place_configure(x=self.dFbFstF_x, y=self.dFsF_y, width=self.dFbF_w, height=self.dF_h)
 
-            self.vbarDetailFrame.place_forget()
-            self.vbarDetailFrame.place(x=self.dFbF_w - 10, y=-12, width=10, height=self.dF_h + 24)
+                self.vbarDetailFrame.place_forget()
+                self.vbarDetailFrame.place(x=self.dFbF_w - 10, y=-12, width=10, height=self.dF_h + 24)
 
-            self.buttonFrame.place_forget()
-            self.buttonFrame.place(x=self.dFbFstF_x, y=self.bF_y, width=self.dFbF_w, height=self.bF_h)
+                self.buttonFrame.place_forget()
+                self.buttonFrame.place(x=self.dFbFstF_x, y=self.bF_y, width=self.dFbF_w, height=self.bF_h)
 
-            self.searchFrame.place_forget()
-            self.searchFrame.place(x=self.dFbF_w + 1, y=self.dFsF_y, width=self.sF_w, height=self.sF_h)
+                self.searchFrame.place_forget()
+                self.searchFrame.place(x=self.dFbF_w + 1, y=self.dFsF_y, width=self.sF_w, height=self.sF_h)
 
-            self.recordFrame.place_forget()
-            self.recordFrame.place(x=self.rF_x, y=self.rF_y, width=self.rF_w, height=self.rF_h)
+                self.recordFrame.place_forget()
+                self.recordFrame.place(x=self.rF_x, y=self.rF_y, width=self.rF_w, height=self.rF_h)
 
-            self.statusFrame.place_forget()
-            self.statusFrame.place(x=self.dFbFstF_x, y=self.stF_y, width=self.stF_w, height=self.stF_h)
+                self.statusFrame.place_forget()
+                self.statusFrame.place(x=self.dFbFstF_x, y=self.stF_y, width=self.stF_w, height=self.stF_h)
 
-            self.txt_search.place_forget()
-            self.txt_search.place_configure(x=162, y=10, height=self.sF_h - 20, width=self.sF_w - 150 - 20 - 2)
+                self.txt_search.place_forget()
+                self.txt_search.place_configure(x=162, y=10, height=self.sF_h - 20, width=self.sF_w - 150 - 20 - 2)
 
-            self.lbl_status.place_forget()
-            self.lbl_status.place_configure(x=0, y=0, width=self.stF_w, height=self.stF_h)
+                self.lbl_status.place_forget()
+                self.lbl_status.place_configure(x=0, y=0, width=self.stF_w, height=self.stF_h)
 
-        if thread_ == 1:
-            if self.cmnset_refT == 'True':
-                self.root.after(int(self.cmnset_refA), lambda: self.RefreshT('1'))
-            elif self.cmnset_refT == 'False':
-                self.root.after(int(self.cmnset_refA), lambda: self.RefreshT('0'))
+            if thread_ == 1:
+                if self.cmnset_refT == 'True':
+                    self.root.after(int(self.cmnset_refA), lambda: self.RefreshT('1'))
+                elif self.cmnset_refT == 'False':
+                    self.root.after(int(self.cmnset_refA), lambda: self.RefreshT('0'))
+        except:
+            pass
+
+    def ResetlblStaT(self, thread_):
+        if thread_ == '1':
+            x = threading.Thread(target=self.ResetlblSta, args=(1,))
+            x.start()
+
+    def ResetlblSta(self, thread_):
+        try:
+            self.lbl_status.config(text='')
+            if thread_ == 1:
+                if self.formset_resetStatus == 'True':
+                    self.root.after(3000, lambda: self.ResetlblStaT('1'))
+        except:
+            pass
+
+    def EnableDb(self):
+        try:
+            db_type = self.dbconfig_db
+
+            if db_type == 'sqlite':
+                try:
+                    self.con = sqlite3.connect(database=self.database)
+                    self.cur = self.con.cursor()
+                    self.status(f'[{self.mainName}] [Database] Connected with sqlite')
+
+                    try:
+                        self.StarterDb()
+                        self.status(f'[{self.mainName}] [Database] Enabled')
+                    except Exception as e:
+                        self.status(f'[{self.mainName}] [Database Error] {e}')
+
+                except Exception as e:
+                    self.status(f'[{self.mainName}] [Database Error] {e}\n\nContact With Creator +923150490481', True, 'Error', 'Database Error')
+
+            elif db_type == 'mysql':
+                host_ = self.dbconfig_host
+                user_ = self.dbconfig_user
+                password_ = self.dbconfig_pass
+
+                try:
+                    self.con = pymysql.connect(host=host_, user=user_, passwd=password_)
+                    self.cur = self.con.cursor()
+                    self.status(f'[{self.mainName}] [Database] Login Successfully')
+                    try:
+                        self.cur.execute(f'use {self.dbdbconfig_dbname}')
+                        self.status(f'[{self.mainName}] [Database] Connected with mysql')
+                    except Exception as e:
+                        self.cur.execute(f'create database {self.dbdbconfig_dbname}')
+                        self.cur.execute(f'use {self.dbdbconfig_dbname}')
+                        self.status(f'[{self.mainName}] [Database] Created and Connected with mysql')
+
+                    try:
+                        self.StarterDb('mysql')
+                        self.status(f'[{self.mainName}] [Database] Enabled')
+                    except Exception as e:
+                        self.status(f'[{self.mainName}] [Database Error] {e}')
+                except Exception as e:
+                    self.status(f'[{self.mainName}] [Database Error] Enter Correct Database Credentials We are not able to Login Database\n\nContact With Creator +923150490481', True, 'Error', 'Database Error')
+                    # Call DB Settings
+            else:
+                self.status(f'[{self.mainName}] [Database Error] Select Database We Cannot Find Any Database And its Setting\n\nContact With Creator +923150490481', True, 'Error', 'Database Error')
+                # Call DB Settings
+        except Exception as e:
+            self.status(f'[{self.mainName}] [Database Error] {e}\n\nContact With Creator +923150490481', True, 'Error', 'Database Error')
 
     def DisableDb(self):
         try:
@@ -943,14 +1048,17 @@ class CommonFunction:
     def delete_Table(self):
         permission = True
         if permission:
-            r = messagebox.askyesno('Are You Sure', "Are You Sure You Want To Remove All Data Of This Form\nDon't Worry It Does Not Remove All Forms", parent=self.root)
+            r = messagebox.askyesno('Are You Sure', "Are You Sure You Want To Remove All Data Of This Form\tDon't Worry It Does Not Remove All Forms", parent=self.root)
             if r:
-                self.cur.execute(f"Drop Table {self.mainName.replace(' ', '_')}")
-                self.con.commit()
-                r_ = messagebox.askyesno('Success', f"All Data Were Removed From {self.mainName} Table\nAre You Want To Recreate Empty {self.mainName} Table Again", parent=self.root)
-                if r_:
-                    self.EnableDb()
-                    self.Clear()
+                try:
+                    self.cur.execute(f"Drop Table {self.mainName.replace(' ', '_')}")
+                    self.con.commit()
+                    r_ = messagebox.askyesno('Success', f"All Data Were Removed From {self.mainName} Table\tAre You Want To Recreate Empty {self.mainName} Table Again", parent=self.root)
+                    if r_:
+                        self.EnableDb()
+                        self.Clear()
+                except Exception as e:
+                    self.status(f'Not Found Table\t{e}')
         else:
             messagebox.askyesno('Need Permission', f"You Don't Have enough Permission to Delete All Data From {self.mainName}", parent=self.root)
 
@@ -984,12 +1092,36 @@ class CommonFunction:
 
     def status(self, txt, msg=False, show='Info', title=None):
         Log_Generator().addLog(txt)
-        self.lbl_status.config(text=txt)
+        try:
+            self.lbl_status.config(text=txt)
+        except: pass
         if msg:
             if show == 'Info':
                 messagebox.showinfo(title, txt, parent=self.root)
+            elif show == 'Warning':
+                messagebox.showwarning(title, txt, parent=self.root)
             else:
                 messagebox.showerror(title, txt, parent=self.root)
+
+    def convertToNo(self, e, var):
+        o = var.get()
+        if o != '':
+            n = ''
+            for i in o:
+                try:
+                    n += str(int(i))
+                except:
+                    pass
+        else:
+            n = '0'
+        var.set(n)
+
+    def GetNumber(self, var):
+        try:
+            n = int(var.get())
+        except:
+            n = 0
+        return n
 
     @staticmethod
     def convertToBinaryData(filename):
@@ -1016,3 +1148,243 @@ class CommonFunction:
         txt = ''
         for i in list: txt += i + sep
         return txt.rstrip(sep)
+
+    @staticmethod
+    def list_nd_Add(lis, var, outVar):
+        ls = var.get().replace(', ', '')
+        p = True
+        for i in range(lis.size()):
+            if ls != lis.get(i):
+                p = False
+            else:
+                p = True
+                break
+
+        if not p:
+            if ls != "" and ls.strip('\t') != '':
+                lis.insert(END, ls)
+                var.set('')
+
+        items = ''
+        for i in range(lis.size()):
+            items+= lis.get(i) + ', '
+        items = items.strip(', ')
+        outVar.set(items)
+
+    @staticmethod
+    def list_ndc_Add(lis, var, outVar, cmbVal, cmb):
+        ls = var.get().replace(', ', '')
+        p = True
+        for i in range(lis.size()):
+            if ls != lis.get(i):
+                p = False
+            else:
+                p = True
+                break
+
+        if not p:
+            if ls != "" and ls.strip('\t') != '':
+                lis.insert(END, ls)
+
+        items = ''
+        itemsL = []
+        for i in range(lis.size()):
+            itemsL.append(lis.get(i))
+            items += lis.get(i) + ', '
+        items = items.strip(', ')
+        outVar.set(items)
+
+        cmb.set("")
+        var.set("")
+        cmb.delete(cmb.get())
+        without_bracket = []
+        fetch = [item for item in cmbVal if item not in itemsL]
+        for i in fetch:
+            without_bracket.append(str(i))
+        without_bracket = list(dict.fromkeys(without_bracket))
+        without_bracket.sort()
+        cmb.config(values=without_bracket)
+        cmb.set_completion_list(without_bracket)
+
+    @staticmethod
+    def list_Add(lis, var, outVar):
+        ls = var.get().replace(', ', '')
+        if ls != "" and ls.strip('\t') != '':
+            lis.insert(END, ls)
+            var.set('')
+
+        items = ''
+        for i in range(lis.size()):
+            items+= lis.get(i) + ', '
+        items = items.strip(', ')
+        outVar.set(items)
+
+    @staticmethod
+    def list_ndc_Del(lis, outVar, var, cmbVal, cmb):
+        try:
+            ls_index = lis.curselection()[0]
+            lis.delete(ls_index)
+
+            items = ''
+            itemsL = []
+            for i in range(lis.size()):
+                items += lis.get(i) + ', '
+                itemsL.append(lis.get(i))
+            items = items.strip(', ')
+            outVar.set(items)
+
+            cmb.set("")
+            var.set("")
+            cmb.delete(cmb.get())
+            without_bracket = []
+            fetch = [item for item in cmbVal if item not in itemsL]
+            for i in fetch:
+                without_bracket.append(str(i))
+            without_bracket = list(dict.fromkeys(without_bracket))
+            without_bracket.sort()
+            cmb.config(values=without_bracket)
+            cmb.set_completion_list(without_bracket)
+        except:
+            pass
+
+    @staticmethod
+    def list_Del(lis, outVar):
+        try:
+            ls_index = lis.curselection()[0]
+            lis.delete(ls_index)
+
+            items = ''
+            for i in range(lis.size()):
+                items += lis.get(i) + ', '
+            items = items.strip(', ')
+            outVar.set(items)
+        except:
+            pass
+
+    @staticmethod
+    def bindList(lis, var, outVar):
+        var.set('')
+        items = outVar.get()
+        items = items.split(', ')
+        lis.delete(0, END)
+        for i in items:
+            lis.insert(END, i)
+
+    @staticmethod
+    def bindList_ndc(lis, var, outVar, cmbVal, cmb, split=None):
+        var.set('')
+        items = outVar.get()
+        items = items.split(', ')
+        lis.delete(0, END)
+        for i in items:
+            lis.insert(END, i)
+        itemsL = []
+        for i in range(lis.size()):
+            itemsL.append(lis.get(i))
+            items += lis.get(i) + ', '
+
+        if split == None:
+            cmb.set("")
+            var.set("")
+            cmb.delete(cmb.get())
+            without_bracket = []
+            fetch = [item for item in cmbVal if item not in itemsL]
+            for i in fetch:
+                without_bracket.append(str(i))
+            without_bracket = list(dict.fromkeys(without_bracket))
+            without_bracket.sort()
+            cmb.config(values=without_bracket)
+            cmb.set_completion_list(without_bracket)
+        else:
+            cmb.set("")
+            var.set("")
+            cmb.delete(cmb.get())
+            without_bracket = []
+            fetch = []
+            if len(itemsL) != 0 and itemsL != ['']:
+                for i in cmbVal:
+                    a = False
+                    for j in itemsL:
+                        try:
+                            j, _ = j.split(split)
+                            if i == j:
+                                a = False
+                                break
+                            elif i != j:
+                                a = True
+                        except:
+                            pass
+                    if a:
+                         fetch.append(i)
+            else:
+                fetch = cmbVal
+
+            for i in fetch:
+                without_bracket.append(str(i))
+            without_bracket = list(dict.fromkeys(without_bracket))
+            without_bracket.sort()
+            cmb.config(values=without_bracket)
+            cmb.set_completion_list(without_bracket)
+
+    def getFormsName(self):
+        list_of_libFiles = os.listdir(self.library_folder)
+        list_of_Forms = [x for x in list_of_libFiles if x.endswith('_frm.py')]
+        list_of_Forms.sort(reverse=True)
+
+        names_of_forms = []
+        # Iterate over each name and modify it as required
+        for name in list_of_Forms:
+            # Remove the "_frm.py" suffix and replace underscores with spaces
+            s = name.replace('_frm.py', '').replace('_', ' ')
+            # Split the string with spaces if the next letter is capital
+            modified_s = s[0]
+            for i in range(1, len(s)):
+                if s[i].isupper() and s[i - 1] != ' ':
+                    modified_s += ' '
+                modified_s += s[i]
+            names_of_forms.append(modified_s)
+        return names_of_forms
+
+    def getFuncList(self):
+        return ['Add', 'Update', 'Delete', 'Import', 'Export', 'Delete All']
+
+    def open_libForm(self, name):
+        obj_toplevel = Toplevel(self.root)
+        self.libFormList[name](obj_toplevel, libFormList=self.libFormList)
+
+    def get_combo_list(self, query, cmb, var, set_none=[]):
+        try:
+            self.cur.execute(query)
+            for i in set_none:
+                i[0].set("")
+                i[1].set("")
+                i[0].delete(i[0].get())
+            cmb.set("")
+            var.set("")
+            cmb.delete(cmb.get())
+            fetch = self.cur.fetchall()
+            without_bracket = []
+            for i in fetch:
+                without_bracket.append(str(i[0]))
+                without_bracket = list(dict.fromkeys(without_bracket))
+                without_bracket.sort()
+                cmb.config(values=without_bracket)
+                cmb.set_completion_list(without_bracket)
+            self.con.commit()
+        except Exception as e:
+            messagebox.showerror('Error', e, parent=self.root)
+
+    def set_combo_text(self, query, var, cmb, var_list, call=False):
+        def set_(query, var, var_list):
+            try:
+                self.cur.execute(query.replace('{var}', var.get()))
+                fetch = self.cur.fetchall()
+                self.con.commit()
+                for c, i in enumerate(var_list):
+                    i.set(fetch[0][c])
+            except Exception as e:
+                self.status(f"[{self.mainName}] [Combobox Select Error] We Found Error: {e}", True, 'Error', 'Combobox Select Error')
+        if call:
+            set_(query, var, var_list)
+        else:
+            cmb.bind('<<ComboboxSelected>>', lambda _: set_(query, var, var_list))

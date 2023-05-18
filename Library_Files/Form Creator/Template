@@ -1,0 +1,164 @@
+try:
+    from Autocomplete_Combo import AutocompleteCombobox
+    from Log_Generator import Log_Generator
+    from Top_Func import Func
+    from ColorScheme import ColorScheme
+    from FormRun import *
+    from FormCommon import *
+except:
+    from Library_Files.Autocomplete_Combo import AutocompleteCombobox
+    from Library_Files.Log_Generator import Log_Generator
+    from Library_Files.Top_Func import Func
+    from Library_Files.ColorScheme import ColorScheme
+    from Library_Files.FormRun import *
+    from Library_Files.FormCommon import *
+
+
+class [cName](BeforeInIt, AllSettings, CommonFunction):
+    wSize, hSize = 800, 550
+    title = "[Title]"
+    mainName = "[mName]"
+
+    def __init__(self, wind, libFormList=[]) -> None:
+        BeforeInIt.__init__(self)
+        AllSettings.__init__(self)
+        super().__init__()
+        self.root = wind
+        self.sortKey = '[Order By]'
+        self.split_pdf_rep = {}
+        self.split_pdf_rep_auto = True
+        self.split_pdf_rep_auto_len = 15
+        self.CommonCall()
+        self.libFormList = libFormList
+
+        y_space = int(self.formset_yInF)  # 30 for 20 fields limit 40 for 15 fields limit
+        self.dF_ent_w = int(self.formset_wOfF)
+        self.dF_ent_x = int(self.formset_xOfF)
+
+        frm_ = Frame(self.detailFrame, bg=self.colorList[2], width=self.dFbF_w - 10, height=20)
+        frm_.pack(fill=BOTH, expand=True)
+
+        frm_id = Frame(self.detailFrame, bg=self.colorList[2], width=self.dFbF_w - 10, height=y_space)
+        frm_id.pack(fill=BOTH, expand=True)
+        lbl_id = Label(frm_id, text='ID', font=self.formset_mainF, bg=self.colorList[7], fg=self.colorList[8], highlightbackground=self.colorList[11], highlightthickness=2, highlightcolor=self.colorList[12])
+        lbl_id.place(x=10, y=1)
+        ent_id = Entry(frm_id, textvariable=self.var_id, disabledbackground=self.colorList[14], disabledforeground=self.colorList[15], state=DISABLED, border=0, font=self.formset_mainF)
+        ent_id.place(x=self.dF_ent_x, y=1, width=self.dF_ent_w, height=self.formset_fieldH){DATA 1}
+
+        self.CommonCall2()
+
+        # Record Frame
+        self.recordFrame = Frame(self.root, bg=self.colorList[2])
+        self.recordFrame.place(x=self.rF_x, y=self.rF_y, width=self.rF_w, height=self.rF_h)
+
+        scroll_y = Scrollbar(self.recordFrame, orient=VERTICAL)
+        scroll_x = Scrollbar(self.recordFrame, orient=HORIZONTAL)
+
+        self.Table = ttk.Treeview(self.recordFrame, columns=['id'{DATA 2}], yscrollcommand=scroll_y.set, xscrollcommand=scroll_x.set)
+        scroll_y.pack(side=RIGHT, fill=Y)
+        scroll_x.pack(side=BOTTOM, fill=X)
+        scroll_y.config(command=self.Table.yview)
+        scroll_x.config(command=self.Table.xview)
+        self.Table.heading('id', text='ID'){DATA 3}
+        self.Table["show"] = "headings"
+        self.Table.column('id', width=50){DATA 4}
+        self.Table.pack(fill=BOTH, expand=True)
+
+        self.CommonCall3()
+
+    def _Add(self, e): self.Add()
+    def _Update(self, e): self.Update()
+    def _Delete(self, e): self.Delete()
+    def _Clear(self, e): self.Clear()
+    def _Import(self, e): self.Import()
+    def _Export(self, e): self.Export()
+
+    def Variables(self):
+        # Variables
+        self.var_id = StringVar()  # id serial Number{DATA 5}
+
+    def Export_def(self):
+        gg = self.Table.get_children()
+        id = []{DATA 6}
+        count = 0
+        for i in gg:
+            content = self.Table.item(i)
+            pp = content['values']
+            count += 1
+            id.append(str(count)){DATA 7}
+
+        headings = self.__list__('head')
+        expList = list(zip(id{DATA 8}))
+        Log_Generator().addLog(f'[Export] {count} Record Found')
+        return count, headings, expList
+
+    def Get_Data(self, e):
+        try:
+            f = self.Table.focus()
+            content = (self.Table.item(f))
+            row = content['values']
+            self.var_id.set(row[0]){DATA 9}
+
+            self.status(f'[{self.mainName}] [Get Data] Record {self.var_id.get()} Selected Successfully')
+        except Exception as ex:
+            self.status(f'[{self.mainName}] [Get Data] Error: {ex}')
+            pass
+
+    def StarterDb(self, db='sqlite'):
+        if db == 'sqlite':
+            self.cur.execute('''CREATE TABLE IF NOT EXISTS "''' + self.mainName.replace(' ', '_') + '''" (
+                "id"	INTEGER NOT NULL UNIQUE,{DATA 10}
+                PRIMARY KEY("id" AUTOINCREMENT))''')
+            self.con.commit()
+        else:
+            self.cur.execute(
+                '''CREATE TABLE IF NOT EXISTS ''' + self.mainName.replace(' ', '_') + ''' (
+                id SERIAL NOT NULL AUTO_INCREMENT{DATA 11} )''')
+            self.con.commit()
+
+    def __list__(self, fetch):
+        list_var = [self.var_id{DATA 12}]
+        list_shn = ['id'{DATA 13}]
+        list_cvar = [[self.var_id, 'ID']{DATA 14}]
+        list_head = ['ID'{DATA 15}]
+        list_headA = ['ID'{DATA 16}]
+
+        if fetch == 'var':
+            return list_var
+        elif fetch == 'cvar':
+            return list_cvar
+        elif fetch == 'shn':
+            return list_shn
+        elif fetch == 'head':
+            return list_head
+        elif fetch == 'headA':
+            return list_headA
+
+    def __bq__(self, q):
+        if q == 'add':
+            query = None
+            return query
+        elif q == 'update':
+            query = None
+            return query
+        elif q == 'delete':
+            query = None
+            return query
+
+    def __aq__(self, q):
+        if q == 'add':
+            query = None
+            return query
+        elif q == 'update':
+            query = None
+            return query
+        elif q == 'delete':
+            query = None
+            return query
+
+
+if __name__ == '__main__':
+    root = Tk()
+    obj = [cName](root)
+    root.mainloop()
+    Log_Generator().closeLog()

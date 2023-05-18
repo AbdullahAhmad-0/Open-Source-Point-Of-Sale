@@ -1,7 +1,11 @@
 try:
     from LogViewer_frm import LogViewer
+    from Setting_frm import Setting_frm
 except:
     from Library_Files.LogViewer_frm import LogViewer
+    try:
+        from Library_Files.Setting_frm import Setting
+    except: pass
 from tkinter import *
 
 class Func:

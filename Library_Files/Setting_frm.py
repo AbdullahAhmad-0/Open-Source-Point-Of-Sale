@@ -6,23 +6,25 @@ import os, threading, shutil
 try:
     from Autocomplete_Combo import AutocompleteCombobox
     from Log_Generator import Log_Generator
-    from Top_Func import Func
     from ColorScheme import ColorScheme
     from FormRun import *
+    from SettingButtons import *
 except:
     from Library_Files.Autocomplete_Combo import AutocompleteCombobox
     from Library_Files.Log_Generator import Log_Generator
-    from Library_Files.Top_Func import Func
     from Library_Files.ColorScheme import ColorScheme
     from Library_Files.FormRun import *
+    from Library_Files.SettingButtons import *
 
 
-class Setting(BeforeInIt, AllSettings):
+class Setting(ButtonsFunctions):
     wSize, hSize = 800, 550
     title = "Setting - Pointing Of Sale"
     mainName = "Setting"
 
-    def __init__(self, wind) -> None:
+    def __init__(self, wind, default_setting_selected=None, libFormList=[]) -> None:
+        ButtonsFunctions.__init__(self)
+        super().__init__()
         self.root = wind
         self.root.title(self.title)
         self.root.iconbitmap(self.iconPath)
@@ -57,10 +59,12 @@ class Setting(BeforeInIt, AllSettings):
 
         y_ = 20
         self.settingFile = StringVar()
-        settingFrom_list = os.listdir(self.setting_folder)
-        settingFrom_list = [x for x in settingFrom_list if not x.endswith('.fl') and not x.endswith('.pn') and not x.endswith('.sv') and x != "Default"]
+        settingFrom_list = [f for f in os.listdir(self.setting_folder) if os.path.isfile(os.path.join(self.setting_folder, f)) and not f.endswith('.fl') and not f.endswith('.pn') and not f.endswith('.sv') and f != "Default"]
         settingFrom_list.sort(reverse=True)
-        self.settingFile.set(settingFrom_list[-1])
+        if default_setting_selected != None:
+            self.settingFile.set(default_setting_selected)
+        else:
+            self.settingFile.set(settingFrom_list[-1])
         lbl_set = Label(self.detailFrame, text='Setting', font=self.formset_mainF, bg=self.colorList[7], fg=self.colorList[8], highlightbackground=self.colorList[11], highlightthickness=2, highlightcolor=self.colorList[12])
         lbl_set.place(x=10, y=y_)
         cmb_set = AutocompleteCombobox(self.detailFrame, values=settingFrom_list, textvariable=self.settingFile, font=self.formset_mainF, background=self.colorList[9], foreground=self.colorList[10])
@@ -147,11 +151,14 @@ class Setting(BeforeInIt, AllSettings):
         menubar.add_cascade(label="Refresh", underline=0, command=lambda: self.Refresh_(thread_=0))
         self.RefreshT('1')
 
-    def Save(self):
+    def Save(self, temp=False):
         selectedSet = self.settingFile.get()
         if selectedSet.endswith('.ls'):
             ls = self.listbox_ls.get(0, self.listbox_ls.size())
-            f = open(f'{self.setting_folder}\\{selectedSet}', 'w')
+            if temp:
+                f = open(f'{self.temp_folder}\\{selectedSet}', 'w')
+            else:
+                f = open(f'{self.setting_folder}\\{selectedSet}', 'w')
             ls = [x.strip('\n').rstrip(' ')+"\n" for x in ls]
             ls = [i for i in ls if i]
             f.writelines(ls)
@@ -187,6 +194,9 @@ class Setting(BeforeInIt, AllSettings):
                             else:
                                 ent_d = self.SetVar[count].get()
                             self.DATAFORSAVE.append(ent_d)
+
+                        elif field_.startswith("button"):
+                            self.DATAFORSAVE.append('button')
 
                         elif field_.startswith("color"):
                             ent_d = self.SetVar[count].get()
@@ -253,7 +263,10 @@ class Setting(BeforeInIt, AllSettings):
                                     new_fd.append(f'{data}')
                                 else:
                                     new_fd.append(f'{fd[int(i)]}')
-                            f = open(f'{self.setting_folder}\\File.fl', 'w')
+                            if temp:
+                                f = open(f'{self.temp_folder}\\File.fl', 'w')
+                            else:
+                                f = open(f'{self.setting_folder}\\File.fl', 'w')
                             f.writelines(new_fd)
                             f.close()
                             name_new += str(name__[c]) + '.'
@@ -281,7 +294,10 @@ class Setting(BeforeInIt, AllSettings):
                         f.close()
                     elif sta == 1:
                         fd[s] = self.DATA[0]
-                        f = open(f"{self.setting_folder}\\{selectedSet.replace('.pg', '')}.sv", 'w')
+                        if temp:
+                            f = open(f"{self.temp_folder}\\{selectedSet.replace('.pg', '')}.sv", 'w')
+                        else:
+                            f = open(f"{self.setting_folder}\\{selectedSet.replace('.pg', '')}.sv", 'w')
                         f.writelines(fd)
                         f.close()
 
@@ -311,6 +327,9 @@ class Setting(BeforeInIt, AllSettings):
                     else:
                         ent_d = self.SetVar[count].get()
                     self.DATAFORSAVE.append(ent_d)
+
+                elif field_.startswith("button"):
+                    self.DATAFORSAVE.append('button')
 
                 elif field_.startswith("color"):
                     ent_d = self.SetVar[count].get()
@@ -377,14 +396,20 @@ class Setting(BeforeInIt, AllSettings):
                             new_fd.append(f'{data}')
                         else:
                             new_fd.append(f'{fd[int(i)]}')
-                    f = open(f'{self.setting_folder}\\File.fl', 'w')
+                    if temp:
+                        f = open(f'{self.temp_folder}\\File.fl', 'w')
+                    else:
+                        f = open(f'{self.setting_folder}\\File.fl', 'w')
                     f.writelines(new_fd)
                     f.close()
                     self.DATA.append(f"{id_}:{name_}.{field_}.{condition_.rstrip(a)}\n")
                 else:
                     self.DATA.append(f"{id_}:{name_new}.{field_}.{condition_.rstrip(a)}\n")
 
-            f = open(f'{self.setting_folder}\\{selectedSet}', 'w')
+            if temp:
+                f = open(f'{self.temp_folder}\\{selectedSet}', 'w')
+            else:
+                f = open(f'{self.setting_folder}\\{selectedSet}', 'w')
             f.writelines(self.DATA)
 
         self.lbl_status.config(text='Setting Saved: Successfully')
@@ -431,6 +456,9 @@ class Setting(BeforeInIt, AllSettings):
 
                         elif field_.startswith("text"):
                             self.SetVar[count].set(name__)
+
+                        elif field_.startswith("button"):
+                            pass
 
                         elif field_.startswith("color"):
                             self.SetVar[count].set(name__)
@@ -494,6 +522,9 @@ class Setting(BeforeInIt, AllSettings):
 
                 elif field_.startswith("text"):
                     self.SetVar[count].set(name_)
+
+                elif field_.startswith("button"):
+                    pass
 
                 elif field_.startswith("color"):
                     self.SetVar[count].set(name_)
@@ -564,6 +595,9 @@ class Setting(BeforeInIt, AllSettings):
                         elif field_.startswith("text"):
                             self.SetVar[count].set(name_)
 
+                        elif field_.startswith("button"):
+                            pass
+
                         elif field_.startswith("color"):
                             self.SetVar[count].set(name_)
 
@@ -605,6 +639,9 @@ class Setting(BeforeInIt, AllSettings):
                 elif field_.startswith("text"):
                     self.SetVar[count].set(name_)
 
+                elif field_.startswith("button"):
+                    pass
+
                 elif field_.startswith("color"):
                     self.SetVar[count].set(name_)
 
@@ -645,7 +682,7 @@ class Setting(BeforeInIt, AllSettings):
 
     def SetAllDefault(self):
         lsd = os.listdir(f'{self.setting_folder}')
-        lsd = [x for x in lsd if x != 'Default']
+        lsd = [x for x in lsd if os.path.isfile(os.path.join(self.setting_folder, x))]
         for i in lsd:
             if os.path.exists(f'{self.setting_folder}\\{i}'):
                 os.remove(f'{self.setting_folder}\\{i}')
@@ -718,9 +755,9 @@ class Setting(BeforeInIt, AllSettings):
                 except:pass
 
             btn_ls_add = Button(self.selectSetFrame, command=Add_ls, justify=LEFT, text='Add', font=(self.formset_mainF, 13), bd=1, cursor='hand2', bg=self.colorList[5], activeforeground=self.colorList[22], activebackground=self.colorList[21], fg=self.colorList[6])
-            btn_ls_add.place(x=self.dF_ent_x + self.dF_ent_w - 99, y=y_, width=50, height=25)
+            btn_ls_add.place(x=self.dF_ent_x + self.dF_ent_w - 99, y=y_, width=50, height=self.formset_fieldH)
             btn_ls_del = Button(self.selectSetFrame, command=Del_ls, justify=LEFT, text='Delete', font=(self.formset_mainF, 13), bd=1, cursor='hand2', bg=self.colorList[5], activeforeground=self.colorList[22], activebackground=self.colorList[21], fg=self.colorList[6])
-            btn_ls_del.place(x=self.dF_ent_x + self.dF_ent_w - 49, y=y_, width=50, height=25)
+            btn_ls_del.place(x=self.dF_ent_x + self.dF_ent_w - 49, y=y_, width=50, height=self.formset_fieldH)
 
             y_ += y_space
             self.listbox_ls = Listbox(self.selectSetFrame, border=0, font=self.formset_mainF, bg=self.colorList[9], fg=self.colorList[10], highlightbackground=self.colorList[11], highlightthickness=2, highlightcolor=self.colorList[12])
@@ -806,15 +843,27 @@ class Setting(BeforeInIt, AllSettings):
 
                         self.SetField_.append("combo")
                         field_ = str(field_)
-                        field_ = field_.replace("combo[", '')
-                        field_ = field_.replace("]", '')
-                        field_ = field_.split(',')
+                        if field_.startswith("comboFIF"):
+                            field_ = field_.replace("comboFIF[", '')
+                            field_ = field_.replace("]", '')
+                            cmb_list = os.listdir(f"{self.setting_folder}\\{field_}")
+                        elif field_.startswith("comboF"):
+                            field_ = field_.replace("comboF[", '')
+                            field_ = field_.replace("]", '')
+                            f = open(f"{self.setting_folder}\\{field_}.ls", 'r')
+                            cmb_list = f.readlines()
+                            cmb_list = [x.rstrip('\\n') for x in cmb_list]
+                            f.close()
+                        elif field_.startswith("combo"):
+                            field_ = field_.replace("combo[", '')
+                            field_ = field_.replace("]", '')
+                            field_ = field_.split(',')
+                            cmb_list = field_
 
                         var_ = StringVar()
                         y_ = 1
                         lbl_ = Label(frm_, text=f'{id_}', font=self.formset_mainF, bg=self.colorList[7], fg=self.colorList[8], highlightbackground=self.colorList[11], highlightthickness=2, highlightcolor=self.colorList[12])
                         lbl_.place(x=10, y=y_)
-                        cmb_list = field_
                         cmb_ = AutocompleteCombobox(frm_, values=cmb_list, textvariable=var_, font=self.formset_mainF, background=self.colorList[9], foreground=self.colorList[10])
                         cmb_.set_completion_list(cmb_list)
                         cmb_.tk.eval(f'[ttk::combobox::PopdownWindow %s].f.l configure -background {self.colorList[13]}' % cmb_)
@@ -857,6 +906,31 @@ class Setting(BeforeInIt, AllSettings):
                         self.SetFields.append(ent_)
                         self.SetVar.append(var_)
 
+                    elif field_.startswith("button"):
+                        frm_ = Frame(self.selectSetFrameO2, bg=self.colorList[2], width=self.dFbF_w - 10, height=y_space)
+                        frm_.pack(fill=BOTH, expand=True)
+
+                        self.SetField_.append("button")
+                        field_ = str(field_)
+                        field_ = field_.replace("button[", '')
+                        field_ = field_.replace("]", '')
+                        field_ = field_.split('|')
+                        field_ = field_[0:len(field_) - 1]
+
+                        y_ = 1
+                        lbl_ = Label(frm_, text=f'{id_}', font=self.formset_mainF, bg=self.colorList[7], fg=self.colorList[8], highlightbackground=self.colorList[11], highlightthickness=2, highlightcolor=self.colorList[12])
+                        lbl_.place(x=10, y=y_)
+                        btnC = len(field_)
+                        btnW = self.dF_ent_w / btnC
+                        btnX = self.dF_ent_x
+                        for i in field_:
+                            id_, func = i.split('+')
+                            btn_ = Button(frm_, command=lambda: (self.Save(temp=True), exec(f'self.{func}'.replace('sseellff', 'self.'), {'self': self})), justify=LEFT, text=id_, font=self.formset_mainF, bd=1, cursor='hand2', bg=self.colorList[5], activeforeground=self.colorList[22], activebackground=self.colorList[21], fg=self.colorList[6])
+                            btn_.place(x=btnX, y=y_, width=btnW - 1, height=self.formset_fieldH)
+                            btnX += btnW
+                        self.SetFields.append('button')
+                        self.SetVar.append('button')
+
                     elif field_.startswith("color"):
                         frm_ = Frame(self.selectSetFrameO2, bg=self.colorList[2], width=self.dFbF_w - 10, height=y_space)
                         frm_.pack(fill=BOTH, expand=True)
@@ -877,7 +951,7 @@ class Setting(BeforeInIt, AllSettings):
                                 self.SetFields[c][1].config(fg=color_code[1])
 
                         btn_ = Button(frm_, command=lambda count=count: color_(count), justify=LEFT, text='🎨', font=('calibri', 13), bd=0, cursor='hand2', bg=self.colorList[5], activeforeground=self.colorList[22], activebackground=self.colorList[21], fg=self.colorList[6])
-                        btn_.place(x=self.dF_ent_x + self.dF_ent_w - 30, y=y_, width=30, height=25)
+                        btn_.place(x=self.dF_ent_x + self.dF_ent_w - 30, y=y_, width=30, height=self.formset_fieldH)
 
                         self.SetFields.append([ent_, btn_])
                         self.SetVar.append(var_)
@@ -903,7 +977,7 @@ class Setting(BeforeInIt, AllSettings):
                                 self.SetFields[c].update()
 
                         btn_openFolder = Button(frm_, command=lambda count=count: aof_(count), justify=LEFT, text='1', font=('wingdings', 15), bd=0, cursor='hand2', bg=self.colorList[5], activeforeground=self.colorList[22], activebackground=self.colorList[21], fg=self.colorList[6])
-                        btn_openFolder.place(x=self.dF_ent_x + self.dF_ent_w - 30, y=y_, width=30, height=25)
+                        btn_openFolder.place(x=self.dF_ent_x + self.dF_ent_w - 30, y=y_, width=30, height=self.formset_fieldH)
 
                     elif field_.startswith("aofiT"):
                         frm_ = Frame(self.selectSetFrameO2, bg=self.colorList[2], width=self.dFbF_w - 10, height=y_space)
@@ -926,7 +1000,7 @@ class Setting(BeforeInIt, AllSettings):
                                 self.SetFields[c].update()
 
                         btn_openFolder = Button(frm_, command=lambda count=count: aof_(count), justify=LEFT, text='1', font=('wingdings', 15), bd=0, cursor='hand2', bg=self.colorList[5], activeforeground=self.colorList[22], activebackground=self.colorList[21], fg=self.colorList[6])
-                        btn_openFolder.place(x=self.dF_ent_x + self.dF_ent_w - 30, y=y_, width=30, height=25)
+                        btn_openFolder.place(x=self.dF_ent_x + self.dF_ent_w - 30, y=y_, width=30, height=self.formset_fieldH)
 
                     elif field_.startswith("no"):
                         frm_ = Frame(self.selectSetFrameO2, bg=self.colorList[2], width=self.dFbF_w - 10, height=y_space)
@@ -974,7 +1048,7 @@ class Setting(BeforeInIt, AllSettings):
                             lbl_ = Label(frm_, text=f'{id_}', font=self.formset_mainF, bg=self.colorList[7], fg=self.colorList[8], highlightbackground=self.colorList[11], highlightthickness=2, highlightcolor=self.colorList[12])
                             lbl_.place(x=10, y=y_)
                             cmb_ = Entry(frm_, border=0, textvariable=var_, font=self.formset_mainF, bg=self.colorList[9], fg=self.colorList[10], highlightbackground=self.colorList[11], highlightthickness=2, highlightcolor=self.colorList[12])
-                            cmb_.place(x=self.dF_ent_x, y=y_, width=self.dF_ent_w)
+                            cmb_.place(x=self.dF_ent_x, y=y_, width=self.dF_ent_w - 100)
                         else:
                             f = open(f"{self.setting_folder}\\{field_}.pn", 'r')
                             cmb_list = f.readlines()
@@ -1005,9 +1079,9 @@ class Setting(BeforeInIt, AllSettings):
                                 pass
 
                         btn_ = Button(frm_, command=lambda count=count, cmb_=cmb_: Add_(count, cmb_), justify=LEFT, text='Add', font=(self.formset_mainF, 13), bd=1, cursor='hand2', bg=self.colorList[5], activeforeground=self.colorList[22], activebackground=self.colorList[21], fg=self.colorList[6])
-                        btn_.place(x=self.dF_ent_x + self.dF_ent_w - 99, y=y_, width=50, height=25)
+                        btn_.place(x=self.dF_ent_x + self.dF_ent_w - 99, y=y_, width=50, height=self.formset_fieldH)
                         btn_ = Button(frm_, command=lambda count=count: Del_(count), justify=LEFT, text='Delete', font=(self.formset_mainF, 13), bd=1, cursor='hand2', bg=self.colorList[5], activeforeground=self.colorList[22], activebackground=self.colorList[21], fg=self.colorList[6])
-                        btn_.place(x=self.dF_ent_x + self.dF_ent_w - 49, y=y_, width=50, height=25)
+                        btn_.place(x=self.dF_ent_x + self.dF_ent_w - 49, y=y_, width=50, height=self.formset_fieldH)
 
                         var_ = StringVar()
                         y_ += y_space
@@ -1042,7 +1116,7 @@ class Setting(BeforeInIt, AllSettings):
                             self.SetFields[c].update()
 
                         btn_ = Button(frm_, command=lambda count=count: cls_(count), justify=LEFT, text='-', font=(self.formset_mainF, 13), bd=0, cursor='hand2', bg=self.colorList[5], activeforeground=self.colorList[22], activebackground=self.colorList[21], fg=self.colorList[6])
-                        btn_.place(x=self.dF_ent_x + self.dF_ent_w - 10, y=y_, width=10, height=25)
+                        btn_.place(x=self.dF_ent_x + self.dF_ent_w - 10, y=y_, width=10, height=self.formset_fieldH)
 
                     elif field_.startswith("attachment"):
                         pass
@@ -1087,15 +1161,27 @@ class Setting(BeforeInIt, AllSettings):
                     frm_.pack(fill=BOTH, expand=True)
 
                     field_ = str(field_)
-                    field_ = field_.replace("combo[", '')
-                    field_ = field_.replace("]", '')
-                    field_ = field_.split(',')
+                    if field_.startswith("comboFIF"):
+                        field_ = field_.replace("comboFIF[", '')
+                        field_ = field_.replace("]", '')
+                        cmb_list = os.listdir(f"{self.setting_folder}\\{field_}")
+                    elif field_.startswith("comboF"):
+                        field_ = field_.replace("comboF[", '')
+                        field_ = field_.replace("]", '')
+                        f = open(f"{self.setting_folder}\\{field_}.ls", 'r')
+                        cmb_list = f.readlines()
+                        cmb_list = [x.rstrip('\\n') for x in cmb_list]
+                        f.close()
+                    elif field_.startswith("combo"):
+                        field_ = field_.replace("combo[", '')
+                        field_ = field_.replace("]", '')
+                        field_ = field_.split(',')
+                        cmb_list = field_
 
                     var_ = StringVar()
                     y_ = 1
                     lbl_ = Label(frm_, text=f'{id_}', font=self.formset_mainF, bg=self.colorList[7], fg=self.colorList[8], highlightbackground=self.colorList[11], highlightthickness=2, highlightcolor=self.colorList[12])
                     lbl_.place(x=10, y=y_)
-                    cmb_list = field_
                     cmb_ = AutocompleteCombobox(frm_, values=cmb_list, textvariable=var_, font=self.formset_mainF, background=self.colorList[9], foreground=self.colorList[10])
                     cmb_.set_completion_list(cmb_list)
                     cmb_.tk.eval(f'[ttk::combobox::PopdownWindow %s].f.l configure -background {self.colorList[13]}' % cmb_)
@@ -1138,6 +1224,30 @@ class Setting(BeforeInIt, AllSettings):
                     self.SetFields.append(ent_)
                     self.SetVar.append(var_)
 
+                elif field_.startswith("button"):
+                    frm_ = Frame(self.selectSetFrameO, bg=self.colorList[2], width=self.dFbF_w - 10, height=y_space)
+                    frm_.pack(fill=BOTH, expand=True)
+
+                    field_ = str(field_)
+                    field_ = field_.replace("button[", '')
+                    field_ = field_.replace("]", '')
+                    field_ = field_.split('|')
+                    field_ = field_[0:len(field_) - 1]
+
+                    y_ = 1
+                    lbl_ = Label(frm_, text=f'{id_}', font=self.formset_mainF, bg=self.colorList[7], fg=self.colorList[8], highlightbackground=self.colorList[11], highlightthickness=2, highlightcolor=self.colorList[12])
+                    lbl_.place(x=10, y=y_)
+                    btnC = len(field_)
+                    btnW = self.dF_ent_w / btnC
+                    btnX = self.dF_ent_x
+                    for i in field_:
+                        id_, func = i.split('+')
+                        btn_ = Button(frm_, command=lambda: (self.Save(temp=True), exec(f'self.{func}'.replace('sseellff', 'self.'), {'self': self})), justify=LEFT, text=id_, font=self.formset_mainF, bd=1, cursor='hand2', bg=self.colorList[5], activeforeground=self.colorList[22], activebackground=self.colorList[21], fg=self.colorList[6])
+                        btn_.place(x=btnX, y=y_, width=btnW - 1, height=self.formset_fieldH)
+                        btnX += btnW
+                    self.SetFields.append('button')
+                    self.SetVar.append('button')
+
                 elif field_.startswith("color"):
                     frm_ = Frame(self.selectSetFrameO, bg=self.colorList[2], width=self.dFbF_w - 10, height=y_space)
                     frm_.pack(fill=BOTH, expand=True)
@@ -1157,7 +1267,7 @@ class Setting(BeforeInIt, AllSettings):
                             self.SetFields[c][1].config(fg=color_code[1])
 
                     btn_ = Button(frm_, command=lambda count=count: color_(count), justify=LEFT, text='🎨', font=('calibri', 13), bd=0, cursor='hand2', bg=self.colorList[5], activeforeground=self.colorList[22], activebackground=self.colorList[21], fg=self.colorList[6])
-                    btn_.place(x=self.dF_ent_x + self.dF_ent_w - 30, y=y_, width=30, height=25)
+                    btn_.place(x=self.dF_ent_x + self.dF_ent_w - 30, y=y_, width=30, height=self.formset_fieldH)
 
                     self.SetFields.append([ent_, btn_])
                     self.SetVar.append(var_)
@@ -1180,7 +1290,7 @@ class Setting(BeforeInIt, AllSettings):
                             self.SetVar[c].set(folderName)
                             self.SetFields[c].update()
                     btn_openFolder = Button(frm_, command=lambda count=count: aof_(count), justify=LEFT, text='1', font=('wingdings', 15), bd=0, cursor='hand2', bg=self.colorList[5], activeforeground=self.colorList[22], activebackground=self.colorList[21], fg=self.colorList[6])
-                    btn_openFolder.place(x=self.dF_ent_x + self.dF_ent_w-30, y=y_, width=30, height=25)
+                    btn_openFolder.place(x=self.dF_ent_x + self.dF_ent_w-30, y=y_, width=30, height=self.formset_fieldH)
 
                 elif field_.startswith("aofiT"):
                     frm_ = Frame(self.selectSetFrameO, bg=self.colorList[2], width=self.dFbF_w - 10, height=y_space)
@@ -1200,7 +1310,7 @@ class Setting(BeforeInIt, AllSettings):
                             self.SetVar[c].set(folderName)
                             self.SetFields[c].update()
                     btn_openFolder = Button(frm_, command=lambda count=count: aof_(count), justify=LEFT, text='1', font=('wingdings', 15), bd=0, cursor='hand2', bg=self.colorList[5], activeforeground=self.colorList[22], activebackground=self.colorList[21], fg=self.colorList[6])
-                    btn_openFolder.place(x=self.dF_ent_x + self.dF_ent_w-30, y=y_, width=30, height=25)
+                    btn_openFolder.place(x=self.dF_ent_x + self.dF_ent_w-30, y=y_, width=30, height=self.formset_fieldH)
 
                 elif field_.startswith("no"):
                     frm_ = Frame(self.selectSetFrameO, bg=self.colorList[2], width=self.dFbF_w - 10, height=y_space)
@@ -1241,7 +1351,7 @@ class Setting(BeforeInIt, AllSettings):
                         lbl_ = Label(frm_, text=f'{id_}', font=self.formset_mainF, bg=self.colorList[7], fg=self.colorList[8], highlightbackground=self.colorList[11], highlightthickness=2, highlightcolor=self.colorList[12])
                         lbl_.place(x=10, y=y_)
                         cmb_ = Entry(frm_, border=0, textvariable=var_, font=self.formset_mainF, bg=self.colorList[9], fg=self.colorList[10], highlightbackground=self.colorList[11], highlightthickness=2, highlightcolor=self.colorList[12])
-                        cmb_.place(x=self.dF_ent_x, y=y_, width=self.dF_ent_w)
+                        cmb_.place(x=self.dF_ent_x, y=y_, width=self.dF_ent_w - 100)
                     else:
                         f = open(f"{self.setting_folder}\\{field_}.pn", 'r')
                         cmb_list = f.readlines()
@@ -1269,9 +1379,9 @@ class Setting(BeforeInIt, AllSettings):
                             self.SetFields[c].delete(ls_index)
                         except:pass
                     btn_ = Button(frm_, command=lambda count=count, cmb_=cmb_: Add_(count, cmb_), justify=LEFT, text='Add', font=(self.formset_mainF, 13), bd=1, cursor='hand2', bg=self.colorList[5], activeforeground=self.colorList[22], activebackground=self.colorList[21], fg=self.colorList[6])
-                    btn_.place(x=self.dF_ent_x + self.dF_ent_w - 99, y=y_, width=50, height=25)
+                    btn_.place(x=self.dF_ent_x + self.dF_ent_w - 99, y=y_, width=50, height=self.formset_fieldH)
                     btn_ = Button(frm_, command=lambda count=count: Del_(count), justify=LEFT, text='Delete', font=(self.formset_mainF, 13), bd=1, cursor='hand2', bg=self.colorList[5], activeforeground=self.colorList[22], activebackground=self.colorList[21], fg=self.colorList[6])
-                    btn_.place(x=self.dF_ent_x + self.dF_ent_w - 49, y=y_, width=50, height=25)
+                    btn_.place(x=self.dF_ent_x + self.dF_ent_w - 49, y=y_, width=50, height=self.formset_fieldH)
 
                     var_ = StringVar()
                     y_ += y_space
@@ -1303,7 +1413,7 @@ class Setting(BeforeInIt, AllSettings):
                         self.SetVar[c].set("")
                         self.SetFields[c].update()
                     btn_ = Button(frm_, command=lambda count=count: cls_(count), justify=LEFT, text='-', font=(self.formset_mainF, 13), bd=0, cursor='hand2', bg=self.colorList[5], activeforeground=self.colorList[22], activebackground=self.colorList[21], fg=self.colorList[6])
-                    btn_.place(x=self.dF_ent_x + self.dF_ent_w - 10, y=y_, width=10, height=25)
+                    btn_.place(x=self.dF_ent_x + self.dF_ent_w - 10, y=y_, width=10, height=self.formset_fieldH)
 
                 elif field_.startswith("attachment"):
                     pass
@@ -1390,6 +1500,12 @@ class Setting(BeforeInIt, AllSettings):
             self.lbl_status.config(text='')
         except:
             pass
+
+    def Reopen(self):
+        selectedSet = self.settingFile.get()
+        self.root.destroy()
+        root = Toplevel()
+        Setting(root,default_setting_selected=selectedSet)
 
 
 if __name__ == '__main__':

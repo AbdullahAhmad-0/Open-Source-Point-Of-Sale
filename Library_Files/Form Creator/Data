@@ -1,0 +1,38 @@
+# Table
+, '{shn}'
+\n        self.Table.heading('{shn}', text='{Name}')
+\n        self.Table.column('{shn}', width={width})
+
+# Variables
+\n        self.var_{shn} = StringVar()  # {Name}
+\n        self.var_{shn}1 = StringVar()  # {Name}\n        self.var_{shn}2 = StringVar()  # {Name}\n        self.var_{shn}3 = StringVar()  # {Name}
+
+# Export Def
+\n        {shn} = []
+\n            {shn}.append(pp[{NO Count}])
+, {shn}
+
+# Get Data
+\n            self.var_{shn}.set(row[{NO Count}])
+\n            self.var_{shn}1.set(row[{NO Count}])\n            self.var_{shn}2.set(row[{NO Count}+1])\n            if self.var_{shn}1.get() == '':\n                self.var_{shn}3.set('Not Attached')\n            elif self.var_{shn}1.get() != '':\n                self.var_{shn}3.set('Attached')
+
+# Starter Db
+\n                "{shn}"	TEXT,
+\n                "{shn}1"  TEXT,\n                "{shn}2"	BLOB,
+\n                , {shn} TEXT NOT NULL
+\n                , {shn}1 TEXT NOT NULL , {shn}2 LONGBLOB NOT NULL
+
+# List
+, self.var_{shn}
+, self.var_{shn}1, self.var_{shn}2
+, '{shn}'
+, '{shn}1', '{shn}2'
+, [self.var_{shn}, '{Name}']
+, [self.var_{shn}1, '{Name}']
+, '{Name}'
+
+# Table Attachment
+, '{shn}_1', '{shn}2'
+\n        self.Table.heading('{shn}_1', text='{Name}')\n        self.Table.heading('{shn}2', text='{Name}')
+\n        self.Table.column('{shn}_1', width={width})\n        self.Table.column('{shn}2', width=0, stretch='no')
+, '{Name}', 'SKIP IT'

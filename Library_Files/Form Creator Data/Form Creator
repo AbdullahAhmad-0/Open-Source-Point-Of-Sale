@@ -1,2 +1,8 @@
 Date,dat_,date,1,100,1
-Region,reg_,combo,2,150,1
+text,r0_,text,2,150,1
+date,r1_,date,3,150,1
+combo,r2_,combo,4,150,1
+no,r3_,no,5,150,1
+attach,r4_,attach,6,150,1
+sta,r4_,sta,7,150,1
+dText,r4_,dText,8,150,1

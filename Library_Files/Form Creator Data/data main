@@ -475,7 +475,7 @@ class [cName]:
         txt_name.place(x=10, y=90, width=280, height=35)
 
         Entry(tp_export, border=0, font=self.formset_mainF, disabledbackground=self.colorList[9], state=DISABLED, disabledforeground=self.colorList[10]).place(x=290, y=90, width=120, height=35)
-        Button(tp_export, text='Export', command=save, justify=LEFT, font=(self.formset_mainF, 15), bd=0, cursor='hand2', bg=self.colorList[5], activeforeground=self.colorList[22], activebackground=self.colorList[21], fg=self.colorList[6]).place(x=295, y=95, width=110, height=25)
+        Button(tp_export, text='Export', command=save, justify=LEFT, font=(self.formset_mainF, 15), bd=0, cursor='hand2', bg=self.colorList[5], activeforeground=self.colorList[22], activebackground=self.colorList[21], fg=self.colorList[6]).place(x=295, y=95, width=110, height=self.formset_fieldH)
 
     def Export_def(self):
         gg = self.Table.get_children()
@@ -706,7 +706,7 @@ class [cName]:
                 self.import_csv(self.cmnset_msgboxAimp)
 
         Entry(tp_import, border=0, font=self.formset_mainF, disabledbackground=self.colorList[9], state=DISABLED, disabledforeground=self.colorList[10]).place(x=890, y=270, width=120, height=35)
-        Button(tp_import, text='Import', command=save, justify=LEFT, font=(self.formset_mainF, 15), bd=0, cursor='hand2', bg=self.colorList[5], activeforeground=self.colorList[22], activebackground=self.colorList[21], fg=self.colorList[6]).place(x=895, y=275, width=110, height=25)
+        Button(tp_import, text='Import', command=save, justify=LEFT, font=(self.formset_mainF, 15), bd=0, cursor='hand2', bg=self.colorList[5], activeforeground=self.colorList[22], activebackground=self.colorList[21], fg=self.colorList[6]).place(x=895, y=275, width=110, height=self.formset_fieldH)
 
     def import_csv(self, m):
         def _imp():

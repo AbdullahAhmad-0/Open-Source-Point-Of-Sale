@@ -33,6 +33,9 @@ class Demo(BeforeInIt, AllSettings, CommonFunction):
     mainName = "Demo"
 
     def __init__(self, wind) -> None:
+        BeforeInIt.__init__(self)
+        AllSettings.__init__(self)
+        super().__init__()
         self.root = wind
         self.sortKey = 'x[2]'
         self.CommonCall()
@@ -49,19 +52,19 @@ class Demo(BeforeInIt, AllSettings, CommonFunction):
         lbl_id = Label(frm_id, text='ID', font=self.formset_mainF, bg=self.colorList[7], fg=self.colorList[8], highlightbackground=self.colorList[11], highlightthickness=2, highlightcolor=self.colorList[12])
         lbl_id.place(x=10, y=1)
         ent_id = Entry(frm_id, textvariable=self.var_id, disabledbackground=self.colorList[14], disabledforeground=self.colorList[15], state=DISABLED, border=0, font=self.formset_mainF)
-        ent_id.place(x=self.dF_ent_x, y=1, width=self.dF_ent_w)
+        ent_id.place(x=self.dF_ent_x, y=1, width=self.dF_ent_w, height=self.formset_fieldH)
 
         frm_dat_ = Frame(self.detailFrame, bg=self.colorList[2], width=self.dFbF_w - 10, height=y_space)
         frm_dat_.pack(fill=BOTH, expand=True)
         lbl_dat_ = Label(frm_dat_, text='Date', font=self.formset_mainF, bg=self.colorList[7], fg=self.colorList[8], highlightbackground=self.colorList[11], highlightthickness=2, highlightcolor=self.colorList[12])
         lbl_dat_.place(x=10, y=1)
         ent_dat_ = DateEntry(frm_dat_, textvariable=self.var_dat_, border=0, font=self.formset_mainF, bg=self.colorList[9], fg=self.colorList[10], highlightbackground=self.colorList[11], highlightthickness=2, highlightcolor=self.colorList[12], justify=CENTER, date_pattern='dd-mm-y')
-        ent_dat_.place(x=self.dF_ent_x, y=1, width=self.dF_ent_w - 10)
+        ent_dat_.place(x=self.dF_ent_x, y=1, width=self.dF_ent_w - 10, height=self.formset_fieldH)
         def cls_dat_():
             self.var_dat_.set("")
             ent_dat_.update()
         btn_dat_ = Button(frm_dat_, command=cls_dat_, justify=LEFT, text='-', font=(self.formset_mainF, 13), bd=0, cursor='hand2', bg=self.colorList[5], activeforeground=self.colorList[22], activebackground=self.colorList[21], fg=self.colorList[6])
-        btn_dat_.place(x=self.dF_ent_x + self.dF_ent_w - 10, y=1, width=10, height=25)
+        btn_dat_.place(x=self.dF_ent_x + self.dF_ent_w - 10, y=1, width=10, height=self.formset_fieldH)
 
         frm_reg_ = Frame(self.detailFrame, bg=self.colorList[2], width=self.dFbF_w - 10, height=y_space)
         frm_reg_.pack(fill=BOTH, expand=True)
@@ -71,7 +74,7 @@ class Demo(BeforeInIt, AllSettings, CommonFunction):
         cmb_reg_ = AutocompleteCombobox(frm_reg_, values=cmb_reg__list, textvariable=self.var_reg_, font=self.formset_mainF, background=self.colorList[9], foreground=self.colorList[10])
         cmb_reg_.set_completion_list(cmb_reg__list)
         cmb_reg_.tk.eval(f'[ttk::combobox::PopdownWindow %s].f.l configure -background {self.colorList[13]}' % cmb_reg_)
-        cmb_reg_.place(x=self.dF_ent_x, y=1, width=self.dF_ent_w)
+        cmb_reg_.place(x=self.dF_ent_x, y=1, width=self.dF_ent_w, height=self.formset_fieldH)
         cmb_reg_.current(0)
 
         self.CommonCall2()
@@ -145,91 +148,21 @@ class Demo(BeforeInIt, AllSettings, CommonFunction):
             self.status(f'[{self.mainName}] [Get Data] Error: {ex}')
             pass
 
-    def EnableDb(self):
-        try:
-            open_db_set = open(self.setting_folder + '\\Database Configurations', 'r')
-            txt_db_set = open_db_set.readlines()
-            open_db_set.close()
-            _, db_type = txt_db_set[0].strip('\n').split(':')
-            db_type, *_ = db_type.split('.')
-            Log_Generator().addLog(f'[Database] {db_type}', )
-
-            if db_type == 'sqlite':
-                try:
-                    self.con = sqlite3.connect(database=self.database)
-                    self.cur = self.con.cursor()
-                    Log_Generator().addLog('[Database] Connected with sqlite')
-
-                    try:
-                        self.cur.execute('''CREATE TABLE IF NOT EXISTS "''' + self.mainName.replace(' ', '_') + '''" (
-                            "id"	INTEGER NOT NULL UNIQUE,
-                            "dat_"	TEXT,
-                            "reg_"	TEXT,
-                            PRIMARY KEY("id" AUTOINCREMENT)
-                        )
-                        ''')
-                        self.con.commit()
-                        self.lbl_status.config(text='Database: Enabled')
-                        Log_Generator().addLog('[Database] Enabled')
-                    except Exception as e:
-                        Log_Generator().addLog(f'[DB Error] {e}')
-
-                except Exception as e:
-                    Log_Generator().addLog(f'[DB Error] {e}')
-                    messagebox.showerror('Error', str(e) + '\n\nContact With Creator +923150490481', parent=self.root)
-
-            elif db_type == 'mysql':
-                _, host_ = txt_db_set[1].strip('\n').split(':')
-                host_, *_ = db_type.split('.')
-                _, user_ = txt_db_set[2].strip('\n').split(':')
-                user_, *_ = db_type.split('.')
-                _, password_ = txt_db_set[3].strip('\n').split(':')
-                password_, *_ = db_type.split('.')
-
-                try:
-                    self.con = pymysql.connect(host=host_, user=user_, passwd=password_)
-                    self.cur = self.con.cursor()
-                    Log_Generator().addLog('[Database] Login successfully')
-                    db_login = True
-                except Exception as e:
-                    db_login = False
-                    Log_Generator().addLog(f'[DB Error] {e}')
-                    messagebox.showerror('Error', str(e) + '\n\nContact With Creator +923150490481', parent=self.root)
-
-                if db_login:
-                    try:
-                        self.cur.execute('use AS_DB')
-                        Log_Generator().addLog(f'[Database] Connected with mysql')
-                    except Exception as e:
-                        self.cur.execute('create database AS_DB')
-                        self.cur.execute('use AS_DB')
-                        Log_Generator().addLog(f'[Database] Created and Connected with mysql')
-
-                    try:
-                        self.cur.execute(
-                            '''CREATE TABLE IF NOT EXISTS ''' + self.mainName.replace(' ', '_') + ''' ( id SERIAL NOT NULL AUTO_INCREMENT 
-                              , dat_ TEXT NOT NULL
-                              , reg_ TEXT NOT NULL )''')
-                        self.con.commit()
-                        self.lbl_status.config(text='Database: Enabled')
-                        Log_Generator().addLog('[Database] Enabled')
-                    except Exception as e:
-                        Log_Generator().addLog(f'[DB Error] {e}')
-                else:
-                    messagebox.showerror('Error',
-                                         'Enter Correct Database Credentials We are not able to Login Database\n\nContact With Creator +923150490481',
-                                         parent=self.root)
-                    Log_Generator().addLog(f'[DB Error] Wrong Credentials You Enter')
-                    # Call DB Settings
-            else:
-                messagebox.showerror('Error',
-                                     'Select Database We Cannot Find Any Database\n\nContact With Creator +923150490481',
-                                     parent=self.root)
-                Log_Generator().addLog(f'[DB Error] Cannot Find Database Setting')
-                # Call DB Settings
-        except Exception as e:
-            Log_Generator().addLog(f'[DB Error] {e}')
-            messagebox.showerror('Error', str(e) + '\n\nContact With Creator +923150490481', parent=self.root)
+    def StarterDb(self, db='sqlite'):
+        if db == 'sqlite':
+            self.cur.execute('''CREATE TABLE IF NOT EXISTS "''' + self.mainName.replace(' ', '_') + '''" (
+                "id"	INTEGER NOT NULL UNIQUE,
+                "dat_"	TEXT,
+                "reg_"	TEXT,
+                PRIMARY KEY("id" AUTOINCREMENT))''')
+            self.con.commit()
+        else:
+            self.cur.execute(
+                '''CREATE TABLE IF NOT EXISTS ''' + self.mainName.replace(' ', '_') + ''' ( 
+                id SERIAL NOT NULL AUTO_INCREMENT,
+                dat_ TEXT NOT NULL,
+                reg_ TEXT NOT NULL )''')
+            self.con.commit()
 
     def __list__(self, fetch):
         list_var = [

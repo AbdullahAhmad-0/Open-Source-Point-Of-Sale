@@ -5,10 +5,9 @@ import threading
 import re, os
 
 # import webbrowser  # For Opening Links
-# from datetime import datetime, timedelta
 
 list_of_libFiles = os.listdir('Library_Files')
-list_of_libFiles = [x for x in list_of_libFiles if x.endswith('_frm.py') and x != 'Log_Generator().py']
+list_of_libFiles = [x for x in list_of_libFiles if x.endswith('_frm.py')]
 list_of_libFiles.sort(reverse=True)
 
 for i in list_of_libFiles:
@@ -20,12 +19,15 @@ from Library_Files.Log_Generator import Log_Generator
 from Library_Files.FormRun import *
 
 
-class Main(BeforeInIt, AllSettings):
+class Main(BeforeInIt, AllSettings, Func):
     wSize, hSize = 700, 550
     title = "Pointing Of Sale"
     mainName = title
 
     def __init__(self, wind) -> None:
+        BeforeInIt.__init__(self)
+        AllSettings.__init__(self)
+        super().__init__()
         if Log_Generator().findLog():
             Log_Generator().startLog()
         else:
@@ -100,7 +102,7 @@ class Main(BeforeInIt, AllSettings):
         self.statusFrame = Frame(self.root, bg=self.colorList[2])
         self.statusFrame.place(x=self.dFbFstF_x, y=self.stF_y, width=self.stF_w, height=self.stF_h)
 
-        self.lbl_status = Label(self.statusFrame, text='Status:', anchor=W, justify=LEFT, font=self.formset_mainF, bg=self.colorList[2], fg=self.colorList[4], highlightbackground=self.colorList[11], highlightthickness=2, highlightcolor=self.colorList[12])
+        self.lbl_status = Label(self.statusFrame, text='Status:', anchor=W, justify=LEFT, font=(self.formset_mainF[0], 13), bg=self.colorList[2], fg=self.colorList[4], highlightbackground=self.colorList[11], highlightthickness=2, highlightcolor=self.colorList[12])
         self.lbl_status.place(x=0, y=0, width=self.stF_w, height=self.stF_h)
 
         self.menubar = Menu(self.root)
@@ -119,8 +121,12 @@ class Main(BeforeInIt, AllSettings):
         fileMenu.add_command(label="Enable Refresh Thread", command=lambda: rT(1))
         fileMenu.add_command(label="Disable Refresh Thread", command=lambda: rT(0))
         fileMenu.add_separator()
-        fileMenu.add_command(label="Exit", underline=0, command=self.root.destroy)
-        self.menubar.add_command(label="x", underline=0, command=self.root.destroy)
+        def close_root():
+            r = messagebox.askyesno('Quit', 'Are you sure you want to exit')
+            if r:
+                self.root.destroy()
+        fileMenu.add_command(label="Exit", underline=0, command=close_root)
+        self.menubar.add_command(label="x", underline=0, command=close_root)
         def minmax():
             self.root.attributes("-fullscreen", not self.root.attributes("-fullscreen"))
             self.root.attributes("-topmost", False)
@@ -130,6 +136,36 @@ class Main(BeforeInIt, AllSettings):
         self.Menu()
         self.menubar.add_cascade(label="Refresh", underline=0, command=lambda: self.Refresh(thread_=0))
         self.RefreshT('1')
+        self.list_libForm = self.libFormList()
+        print(self.list_libForm)
+
+    def libFormList(self):
+        f = open(f'Forms', 'r')
+        fread = f.read()
+        f.close()
+        names = fread.split('\n')
+        forms = []
+        for name in names:
+            # match form names that follow the pattern '[name]' or '[name].[subname]'
+            if "." in name:
+                matches = re.findall(r'\[(.*?)\]', name)
+                for match in matches:
+                    # extract the form name(s)
+                    form_names = [name.strip() for name in match.split(',') if name is not None]
+                    forms.extend(form_names)
+            else:
+                forms.append(name)
+
+        func = []
+        for i in forms:
+            btn_cls = f'{i}'.replace(' ', '')
+            try:
+                func.append(globals()[btn_cls])
+            except:
+                func.append('ERROR')
+        func_dict = dict(zip(forms, func))
+
+        return func_dict
 
     def Menu(self):
         f = open(f'Forms', 'r')
@@ -155,7 +191,7 @@ class Main(BeforeInIt, AllSettings):
             btn_cls = f'{btn_}'.replace(' ', '')
             try:
                 obj_toplevel = Toplevel(root)
-                exec(f'{btn_cls}(obj_toplevel)')
+                globals()[btn_cls](obj_toplevel, libFormList=self.list_libForm)
                 Log_Generator().addLog(f"[Open Form] {btn_frm}")
             except:
                 messagebox.showerror("Error", f"Error While Finding The {btn_} Form")
@@ -220,10 +256,10 @@ class Main(BeforeInIt, AllSettings):
             btn_cls = f'{btn_}'.replace(' ', '')
             try:
                 obj_toplevel = Toplevel(root)
-                exec(f'{btn_cls}(obj_toplevel)')
+                globals()[btn_cls](obj_toplevel, libFormList=self.list_libForm)
                 Log_Generator().addLog(f"[Open Form] {btn_frm}")
-            except:
-                messagebox.showerror("Error", f"Error While Finding The {btn_} Form")
+            except Exception as e:
+                messagebox.showerror("Error", f"Error While Finding The {btn_} Form {e}")
                 Log_Generator().addLog(f"[Error] While Finding The {btn_} Form")
 
         elif single == '0':

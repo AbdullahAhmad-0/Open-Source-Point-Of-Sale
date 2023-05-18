@@ -32,7 +32,11 @@ main = main.replace('{DATA 2}', mainData02)
 
 new_shn = input('Enter New Name: ')
 main = main.replace('{new}', new_shn)
+new_shn = input('Enter Fetch Form: ')
+main = main.replace('{fetch_from}', new_shn)
 new_tbl = input('Enter Table Name: ')
-main = main.replace('{tName}', new_tbl)
+main = main.replace('{tName_}', new_tbl.replace(' ', '_'))
+main = main.replace('{tName}', new_tbl.replace('_', ' '))
+main = main.replace('{btn_ref}', '🔃')
 
 print(main)
